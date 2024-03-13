@@ -3,7 +3,7 @@ from itertools import product
 import random
 
 
-class ConcreteFlatWorkflowTask():
+class WorkflowTask():
 
     def __init__(self, name):
         self.params = {}
@@ -38,7 +38,7 @@ class ConcreteFlatWorkflowTask():
         self.params[key] = value
 
     def clone(self):
-        new_t = ConcreteFlatWorkflowTask(self.name)
+        new_t = WorkflowTask(self.name)
         new_t.add_implementation_file(self.impl_file)
         new_t.add_sub_workflow_name(self.sub_workflow_name)
         if self.sub_workflow_name:
@@ -62,7 +62,7 @@ class ConcreteFlatWorkflowTask():
         print(f"{tab}\twith params: {self.params}")
 
 
-class ConcreteFlatWorkflow():
+class Workflow():
 
     def __init__(self, name):
         self.is_main = None
@@ -85,7 +85,7 @@ class ConcreteFlatWorkflow():
         self.is_main = is_main
 
     def clone(self):
-        new_w = ConcreteFlatWorkflow(self.name)
+        new_w = Workflow(self.name)
         new_w.is_main = self.is_main
         for t in self.tasks:
             new_t = t.clone()
@@ -188,7 +188,7 @@ def get_underlying_tasks(t, assembled_wf, tasks_to_add):
 
 def flatten_workflows(assembled_wf):
     print(f"Flattening assembled workflow with name {assembled_wf.name}")
-    new_wf = ConcreteFlatWorkflow(assembled_wf.name)
+    new_wf = Workflow(assembled_wf.name)
     for t in assembled_wf.tasks:
         if t.sub_workflow:
             tasks_to_add = get_underlying_tasks(t, assembled_wf, [])
@@ -314,14 +314,14 @@ print("*********************************************************")
 
 parsed_workflows = []
 for workflow in workflow_model.workflows:
-    wf = ConcreteFlatWorkflow(workflow.name)
+    wf = Workflow(workflow.name)
     parsed_workflows.append(wf)
 
     task_dependencies = {}
 
     for e in workflow.elements:
         if e.__class__.__name__ == "DefineTask":
-            task = ConcreteFlatWorkflowTask(e.name)
+            task = WorkflowTask(e.name)
             wf.add_task(task)
 
         if e.__class__.__name__ == "ConfigureTask":
