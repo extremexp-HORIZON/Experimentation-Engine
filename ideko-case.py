@@ -1,4 +1,4 @@
-from proactive_helper import *
+from proactive_interface import *
 import credentials
 
 gateway = create_gateway_and_connect_to_it(credentials.proactive_username, credentials.proactive_password)
