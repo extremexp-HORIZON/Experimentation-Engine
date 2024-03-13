@@ -15,7 +15,7 @@ python3 -m pip install https://files.pythonhosted.org/packages/d7/b7/c4dd046ad83
 ## Configure credentials
 1. Create `credentials.py` file via copying the template, e.g. by:
     ```
-    mv credentials-TEMPLATE.py credentials.py
+    cp credentials-TEMPLATE.py credentials.py
     ``` 
 2. Verify that the `credentials.py` is git ignored (check `.gitignore`)
 1. Add your proactive account name and password to `credentials.py`

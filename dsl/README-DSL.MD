@@ -14,7 +14,7 @@ as in, e.g. `ideko-case.py`.
 
 ## Instructions
 ```
-python3 -m venv env    if not already present) 
+python3 -m venv env    #(if not already present) 
 source ./env/bin/activate
 pip install textx
 ```
