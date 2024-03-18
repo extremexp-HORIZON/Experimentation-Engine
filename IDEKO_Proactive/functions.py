@@ -3,6 +3,9 @@ from itertools import product
 import random
 import streamlit as st
 from classes import *
+import proactive
+import credentials
+import time
 
 def process_dependencies(task_dependencies, nodes, parsing_node_type, verbose_logging=False):
     if verbose_logging:
@@ -343,3 +346,66 @@ def generate_assembled_workflows(parsed_workflows, assembled_workflows_data, wor
 
         for vp_method in vp_methods:
             run_experiment(assembled_flat_wfs,vp_method)
+
+
+
+def connect_proactive():
+    try:
+        with st.status("Connecting to proactive-server...", expanded=True) as status:
+            st.write("Logging on proactive-server...")
+            time.sleep(1)
+            proactive_host = 'try.activeeon.com'
+            proactive_port = '8443'
+            proactive_url = "https://" + proactive_host + ":" + proactive_port
+            st.write("Creating gateway...")
+            gateway = proactive.ProActiveGateway(proactive_url, debug=False)
+            time.sleep(2)
+            st.write("Gateway created.")
+            time.sleep(1)
+            st.write("Connecting on: " + proactive_url)
+            time.sleep(1)
+            gateway.connect(username=credentials.proactive_username, password=credentials.proactive_password)
+            assert gateway.isConnected() is True
+            status.update(label="Done!", state="complete", expanded=True)
+
+        st.success("Successfully Connected")
+        return gateway
+
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+
+
+def create_proactive_job(gateway):
+    print("Creating a proactive job...")
+    proactive_job = gateway.createJob()
+    proactive_job.setJobName("SimplePythonJob")
+    print("Job created.")
+
+    print("Creating a proactive task...")
+    proactive_task = gateway.createPythonTask()
+    proactive_task.setTaskName("SimplePythonTask")
+    proactive_task.setTaskImplementation("""
+    result='Hello from SimplePythonJob world!'
+    print(result)
+    """)
+    print("Task created.")
+
+    print("Adding task to the job...")
+    proactive_job.addTask(proactive_task)
+    print("Task added.")
+
+    print("Submitting the job to the proactive scheduler...")
+    job_id = gateway.submitJob(proactive_job, debug=False)
+    print("job_id: " + str(job_id))
+
+    print("Getting job output...")
+    job_result = gateway.getJobResult(job_id)
+    print(job_result)
+
+    print("Disconnecting")
+    gateway.disconnect()
+    print("Disconnected")
+    gateway.terminate()
+    print("Finished")
+
+
