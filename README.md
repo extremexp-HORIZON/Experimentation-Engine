@@ -9,7 +9,7 @@ For trying out the Proactive Pythen SDK within the ExtremeXP project.
 python3 -m venv env
 source ./env/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel python-dotenv
-python3 -m pip install https://files.pythonhosted.org/packages/d7/b7/c4dd046ad83363536b64d620f07795e3bbaadb2d0519f91c5ec4b45909c3/proactive-13.1.0.2312311805.dev0.zip
+pip install --upgrade --pre proactive
 ```
 
 ## Configure credentials
