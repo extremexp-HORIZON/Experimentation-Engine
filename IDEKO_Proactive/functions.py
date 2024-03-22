@@ -376,36 +376,65 @@ def connect_proactive():
 
 
 def create_proactive_job(gateway):
-    print("Creating a proactive job...")
+    st.write("Creating a proactive job...")
     proactive_job = gateway.createJob()
     proactive_job.setJobName("SimplePythonJob")
-    print("Job created.")
+    st.write("Job created.")
 
-    print("Creating a proactive task...")
+    st.write("Creating a proactive task...")
     proactive_task = gateway.createPythonTask()
     proactive_task.setTaskName("SimplePythonTask")
-    proactive_task.setTaskImplementation("""
-    result='Hello from SimplePythonJob world!'
-    print(result)
-    """)
-    print("Task created.")
+    proactive_task.setTaskImplementationFromFile("test.py")
+    st.write("Task created.")
 
-    print("Adding task to the job...")
+    st.write("Adding task to the job...")
     proactive_job.addTask(proactive_task)
-    print("Task added.")
+    st.write("Task added.")
 
-    print("Submitting the job to the proactive scheduler...")
+    st.write("Submitting the job to the proactive scheduler...")
     job_id = gateway.submitJob(proactive_job, debug=False)
-    print("job_id: " + str(job_id))
+    st.write("job_id: " + str(job_id))
 
-    print("Getting job output...")
+    st.write("Getting job output...")
     job_result = gateway.getJobResult(job_id)
-    print(job_result)
+    st.write(job_result)
 
-    print("Disconnecting")
+    st.write("Disconnecting")
     gateway.disconnect()
-    print("Disconnected")
+    st.write("Disconnected")
     gateway.terminate()
-    print("Finished")
+    st.write("Finished")
 
 
+def create_python_task(gateway, task_name, fork_environment, task_impl, input_files=[], dependencies=[], is_precious_result=False):
+    print(f"Creating task {task_name}...")
+    task = gateway.createPythonTask()
+    task.setTaskName(task_name)
+    task.setTaskImplementationFromFile(task_impl)
+    task.setForkEnvironment(fork_environment)
+    for input_file in input_files:
+        task.addInputFile(input_file)
+    for dependency in dependencies:
+        task.addDependency(dependency)
+    task.setPreciousResult(is_precious_result)
+    print("Task created.")
+    return task
+
+def create_job(gateway, workflow_name):
+    print("Creating a proactive job...")
+    proactive_job = gateway.createJob()
+    proactive_job.setJobName(workflow_name)
+    print("Job created.")
+    return proactive_job
+
+def create_fork_env(gateway, proactive_job):
+    print("Adding a fork environment to the import task...")
+    proactive_fork_env = gateway.createForkEnvironment(language="groovy")
+    proactive_fork_env.setImplementationFromFile("./scripts/fork_env.groovy")
+    proactive_job.addVariable("CONTAINER_PLATFORM", "docker")
+    proactive_job.addVariable("CONTAINER_IMAGE", "docker://activeeon/dlm3")
+    proactive_job.addVariable("CONTAINER_GPU_ENABLED", "false")
+    proactive_job.addVariable("CONTAINER_LOG_PATH", "/shared")
+    proactive_job.addVariable("HOST_LOG_PATH", "/shared")
+    print("Fork environment created.")
+    return proactive_fork_env
