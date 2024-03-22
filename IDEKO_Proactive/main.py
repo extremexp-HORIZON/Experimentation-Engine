@@ -11,7 +11,6 @@ def main():
     st.write("")
     st.write("")
 
-    # Always render the button
     start_button_clicked = st.button("Start New Project or Experiment")
 
     if "clicked" not in st.session_state:

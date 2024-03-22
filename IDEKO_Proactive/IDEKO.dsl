@@ -26,9 +26,13 @@ workflow BinaryClassificationModel {
   define data PaddedData;
   define data TrainingData;
   define data TestData;
+  define data ReadDataInput;
 
+  configure data ReadDataInput {
+    path "filepath";
+  }
 
-  ReadData --> RawData --> AddPadding --> PaddedData --> SplitData;
+  ReadDataInput --> ReadData --> RawData --> AddPadding --> PaddedData --> SplitData;
   SplitData --> TrainingData;
   SplitData --> TestData;
 

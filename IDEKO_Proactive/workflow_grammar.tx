@@ -9,7 +9,7 @@ Workflow:
 ;
 
 // Note: StartAndEndEvent has to be come BEFORE StartEvent in the next line
-Element: Node | Data | ConfigureTask |  StartAndEndEvent | StartEvent | EndEvent | TaskLink | ConditionLink | DataLink | GroupTask | Comment;
+Element: Node | Data | ConfigureTask | ConfigureData |  StartAndEndEvent | StartEvent | EndEvent | TaskLink | ConditionLink | DataLink | GroupTask | Comment;
 
 Node:
     DefineTask | Operator
@@ -46,6 +46,11 @@ ConfigureTask:
         ('param' parameters=ID ('=' values=INT | STRING | FLOAT | BOOL | "null")* ';')*
         ('implementation' workflow=[Workflow]';' | 'implementation' filename=STRING';')?
         (subtasks=ConfigureTask)*
+    '}';
+
+ConfigureData:
+    'configure data' alias=[Data] '{'
+        ('path' path=STRING ';')*
     '}';
 
 
