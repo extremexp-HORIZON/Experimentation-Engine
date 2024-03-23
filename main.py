@@ -1,6 +1,19 @@
+import os
 import textx
 from itertools import product
 import random
+from dsl import dsl_exceptions
+from wf_execution import execute_wf
+
+
+class WorkflowDataset():
+
+    def __init__(self, name):
+        self.name = name
+        self.path = None
+
+    def add_path(self, path):
+        self.path = path
 
 
 class WorkflowTask():
@@ -68,12 +81,19 @@ class Workflow():
         self.is_main = None
         self.name = name
         self.tasks = []
+        self.datasets = []
 
     def add_task(self, task):
         self.tasks.append(task)
 
+    def add_dataset(self, dataset):
+        self.datasets.append(dataset)
+
     def get_task(self, name):
         return next(t for t in self.tasks if t.name == name)
+
+    def get_dataset(self, name):
+        return next(ds for ds in self.datasets if ds.name == name)
 
     def is_flat(self):
         for t in self.tasks:
@@ -119,9 +139,11 @@ def process_dependencies(task_dependencies, nodes, parsing_node_type, verbose_lo
 def add_input_output_data(wf, nodes):
     for n1, n2 in zip(nodes[0::1], nodes[1::1]):
         if n1.__class__.__name__ == "DefineTask":
-            wf.get_task(n1.name).output_files.append(n2.name)
-        if n1.__class__.__name__ == "Data":
-            wf.get_task(n2.name).input_files.append(n1.name)
+            ds = wf.get_dataset(n2.name)
+            wf.get_task(n1.name).output_files.append(ds.path)
+        if n1.__class__.__name__ == "DefineData":
+            ds = wf.get_dataset(n1.name)
+            wf.get_task(n2.name).input_files.append(ds.path)
 
 
 def apply_task_dependencies_and_set_order(wf, task_dependencies):
@@ -238,12 +260,6 @@ def generate_final_assembled_workflows(wfs, assembled_wfs_data):
     return new_wfs
 
 
-def execute_wf(w):
-    print(f"Executing workflow {w.name}")
-    w.print()
-    print(f"Finished executing workflow {w.name}")
-
-
 def configure_final_workflow(vp_method, c):
     w = next(w for w in assembled_flat_wfs if w.name == vp_method["assembled_workflow"])
     for t in w.tasks:
@@ -302,10 +318,10 @@ def run_experiment(vp_method):
         run_random_search_exp(vp_method)
 
 
-with open('IDEKO.dsl', 'r') as file:
+with open('dsl/IDEKO-simple.dsl', 'r') as file:
     workflow_code = file.read()
 
-workflow_metamodel = textx.metamodel_from_file('workflow_grammar.tx')
+workflow_metamodel = textx.metamodel_from_file('dsl/workflow_grammar.tx')
 workflow_model = workflow_metamodel.model_from_str(workflow_code)
 
 print("*********************************************************")
@@ -324,13 +340,24 @@ for workflow in workflow_model.workflows:
             task = WorkflowTask(e.name)
             wf.add_task(task)
 
+        if e.__class__.__name__ == "DefineData":
+            ds = WorkflowDataset(e.name)
+            wf.add_dataset(ds)
+
         if e.__class__.__name__ == "ConfigureTask":
             task = wf.get_task(e.alias.name)
             if e.workflow:
                 task.add_sub_workflow_name(e.workflow.name)
             elif e.filename:
-                task = wf.get_task(e.alias.name)
+                if not os.path.exists(e.filename):
+                    raise dsl_exceptions.ImplementationFileNotFound(f"{e.filename} in task {e.alias.name}")
                 task.add_implementation_file(e.filename)
+            if e.dependency:
+                task.input_files.append(e.dependency)
+
+        if e.__class__.__name__ == "ConfigureData":
+            ds = wf.get_dataset(e.alias.name)
+            ds.add_path(e.path)
 
         if e.__class__.__name__ == "StartAndEndEvent":
             process_dependencies(task_dependencies, e.nodes, "StartAndEndEvent")
@@ -367,14 +394,16 @@ for assembled_workflow in workflow_model.assembledWorkflows:
     assembled_workflow_tasks = {}
     assembled_workflow_data["tasks"] = assembled_workflow_tasks
 
-    configurations = assembled_workflow.configure
+    configurations = assembled_workflow.tasks
     while configurations:
-        for config in assembled_workflow.configure:
+        for config in assembled_workflow.tasks:
             assembled_workflow_task = {}
             if config.workflow:
                 assembled_workflow_task["workflow"] = config.workflow
                 assembled_workflow_tasks[config.alias.name] = assembled_workflow_task
             elif config.filename:
+                if not os.path.exists(config.filename):
+                    raise dsl_exceptions.ImplementationFileNotFound(f"{config.filename} in task {config.alias.name}")
                 assembled_workflow_task["implementation"] = config.filename
                 assembled_workflow_tasks[config.alias.name] = assembled_workflow_task
             configurations.remove(config)
