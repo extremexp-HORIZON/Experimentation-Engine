@@ -6,34 +6,33 @@ workflow BinaryClassificationModel {
   define task TrainModel;
 
   configure task ReadData {
-    implementation "read_data.py";
+    implementation "tasks/IDEKO/read_data.py";
+    dependency "tasks/IDEKO/src/**";
+  }
+
+  configure task AddPadding {
+      implementation "tasks/IDEKO/add_padding.py";
+      dependency "tasks/IDEKO/src/**";
+    }
+
+  configure task SplitData {
+      implementation "tasks/IDEKO/split_data.py";
+      dependency "tasks/IDEKO/src/**";
   }
 
   configure task TrainModel {
-    implementation TrainingAndEvaluation;
+      dependency "tasks/IDEKO/src/**";
   }
 
   START -> ReadData -> AddPadding -> SplitData -> TrainModel -> END;
 
-  // START -> ReadData -> AddPadding;
-  // AddPadding -> SplitData -> TrainModel -> END;
+  define data ReadDataInput;
 
-  // START -> ReadData -> AddPadding;
-  // AddPadding -> SplitData -> TrainModel;
-  // TrainModel -> END;
+  configure data ReadDataInput {
+     path "datasets/ideko-subset/**";
+  }
 
-  define data RawData;
-  define data PaddedData;
-  define data TrainingData;
-  define data TestData;
-
-
-  ReadData --> RawData --> AddPadding --> PaddedData --> SplitData;
-  SplitData --> TrainingData;
-  SplitData --> TestData;
-
-  TrainingData --> TrainModel;
-  TestData --> TrainModel;
+  ReadDataInput --> ReadData;
 
 }
 
