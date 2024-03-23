@@ -194,7 +194,9 @@ class RecurrentNeuralNetwork(ModelConfiguration):
         self.model = Sequential()
 
         # Input layer: input of the model
-        self.model.add(Input(shape = self.input_shape))
+        # TODO
+        self.model.add(InputLayer(input_shape = self.input_shape))
+        # self.model.add(Input(shape = self.input_shape))
 
         # Masking layer to skip the padding values during training
         self.model.add(Masking(mask_value = 0))
