@@ -73,7 +73,7 @@ GroupTask:  'group' name=ID '{' node+=[Node]* '};' ;
 
 AssembledWorkflow:
     'assembled workflow' name=ID 'from' parent_workflow=[Workflow] '{'
-        (tasks+=ConfigureTask*)*
+        (tasks=ConfigureTask)*
     '}';
 
 ESpace:

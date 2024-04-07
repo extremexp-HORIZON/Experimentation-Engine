@@ -53,7 +53,7 @@ espace RNNExpSpace of IDEKO_V1_RNN {
 
     configure self {
         method gridsearch as g2;
-        g2.text = enum("hello1");
+        g2.text = enum("hello1","hello2");
     }
 
     task ReadData{
