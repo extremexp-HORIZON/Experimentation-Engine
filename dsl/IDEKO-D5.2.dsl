@@ -67,7 +67,6 @@ assembled workflow IDEKO_V1_RNN from IDEKO_V1 {
 
 
 espace NNExpSpace of IDEKO_V1_NN {
-
     configure self {
         method gridsearch as g;
         // the onces below are training parameter, but also structural parameters could be used
