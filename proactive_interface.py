@@ -55,7 +55,10 @@ def create_python_task(gateway, task_name, fork_environment, task_impl, input_fi
 
 def configure_task(task, configurations):
     for k in configurations.keys():
-        task.addVariable(k, configurations[k])
+        value = configurations[k]
+        if type(value) == int:
+            value = str(value)
+        task.addVariable(k, value)
 
 
 def submit_job_and_retrieve_results_and_outputs(gateway, job):
@@ -65,11 +68,11 @@ def submit_job_and_retrieve_results_and_outputs(gateway, job):
     print("job_id: " + str(job_id))
 
     print("Getting job results...")
-    job_result = gateway.getJobResult(job_id)
+    job_result = gateway.getJobResult(job_id, 300000)
     print(job_result)
 
     print("Getting job outputs...")
-    job_outputs = gateway.printJobOutput(job_id)
+    job_outputs = gateway.printJobOutput(job_id, 300000)
     print(job_outputs)
 
     return job_id, job_result, job_outputs

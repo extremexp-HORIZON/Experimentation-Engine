@@ -39,8 +39,10 @@ activation_function = "relu"
 units =[100, 100, 100]
 
 # Number of epochs y batch_size
-epochs = 2
-batch_size = 64
+# epochs = 2
+# batch_size = 64
+epochs = int(variables.get("epochs"))
+batch_size = int(variables.get("batch_size"))
 
 n_timestamps, n_features = ph.load_datasets(variables, "n_timestamps", "n_features")
 X_train, y_train = ph.load_datasets(variables, "X_train", "y_train")
