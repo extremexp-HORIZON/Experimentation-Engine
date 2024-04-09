@@ -6,6 +6,8 @@ workflow IDEKO_V1 {
   define task TrainModel;
   //define task EvaluateModel;
 
+  START -> ReadData -> AddPadding -> SplitData -> TrainModel  -> END;
+
   configure task ReadData {
     implementation "tasks/IDEKO/read_data.py";
     dependency "tasks/IDEKO/src/**";
@@ -30,7 +32,7 @@ workflow IDEKO_V1 {
       //dependency "tasks/IDEKO/src/**";
   //}
 
-  START -> ReadData -> AddPadding -> SplitData -> TrainModel  -> END;
+
 
   // DATA
   define data InputData;
@@ -40,15 +42,20 @@ workflow IDEKO_V1 {
   define data TestData;
 
   // DATA CONNECTIONS
-  InputData --> ReadData --> RawData --> AddPadding --> PaddedData --> SplitData;
-  SplitData --> TrainingData;
-  SplitData --> TestData;
-  TrainingData --> TrainModel;
-  TestData --> TrainModel;
+
+  //InputData --> ReadData --> RawData --> AddPadding --> PaddedData --> SplitData;
+  //SplitData --> TrainingData;
+  //SplitData --> TestData;
+  //TrainingData --> TrainModel;
+  //TestData --> TrainModel;
+
+
 
   configure data InputData {
      path "datasets/ideko-subset/**";
   }
+
+  InputData --> ReadData;
 
 }
 
