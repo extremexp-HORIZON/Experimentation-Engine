@@ -39,15 +39,16 @@ workflow IDEKO_V1 {
   define data TrainingData;
   define data TestData;
 
-  // TASK CONNECTIONS
-  START -> ReadData -> AddPadding -> SplitData -> TrainModel -> End;
-
   // DATA CONNECTIONS
   InputData --> ReadData --> RawData --> AddPadding --> PaddedData --> SplitData;
   SplitData --> TrainingData;
   SplitData --> TestData;
   TrainingData --> TrainModel;
   TestData --> TrainModel;
+
+  configure data ReadDataInput {
+     path "datasets/ideko-subset/**";
+  }
 
 }
 
