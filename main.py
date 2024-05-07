@@ -318,7 +318,7 @@ def run_experiment(vp_method):
         run_random_search_exp(vp_method)
 
 
-with open('dsl/IDEKO-simple.dsl', 'r') as file:
+with open('dsl/IDEKO-D5.2.dsl', 'r') as file:
     workflow_code = file.read()
 
 workflow_metamodel = textx.metamodel_from_file('dsl/workflow_grammar.tx')

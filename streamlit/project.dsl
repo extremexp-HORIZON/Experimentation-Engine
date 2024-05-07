@@ -49,15 +49,18 @@ assembled workflow IDEKO_V1_RNN from IDEKO_V1 {
 }
 
 
-espace RNNExpSpace of IDEKO_V1_RNN {
+espace NNExpSpace of IDEKO_V1_RNN {
 
     configure self {
-        method gridsearch as g2;
-        g2.text = enum("hello1","hello2");
+        method gridsearch as g;
+        // the onces below are training parameter, but also structural parameters could be used
+        g.epochs_vp = enum(50, 100);
+        g.batch_size_vp = enum(64, 128);
     }
 
-    task ReadData{
-        param text_to_print = g2.text;
+    task TrainModel{
+        param epochs = g.epochs_vp;
+        param batch_size_vp = g.batch_size_vp;
     }
 
 }

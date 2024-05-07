@@ -49,7 +49,7 @@ assembled workflow IDEKO_V1_RNN from IDEKO_V1 {
 }
 
 
-espace NNExpSpace of IDEKO_V1_NN {
+espace NNExpSpace of IDEKO_V1_RNN {
 
     configure self {
         method gridsearch as g;
