@@ -51,7 +51,11 @@ def main():
 
     st.write("---")
     st.markdown("<h2 style='color: #38D6A2;'>Demo Video</h2>", unsafe_allow_html=True)
-    st.video("ScreenRecordingFull.mp4", start_time=0, subtitles=None)
+    # st.video("ScreenRecordingFull.mp4", start_time=0, subtitles=None, width=200, height=300)
+    st.markdown(
+        f'<video style="border: 1px solid black;" width=1000 height=400 controls><source src="ScreenRecordingFull.mp4" type="video/mp4"></video>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown("[Getting Started](pages/README.MD)")
     st.markdown("[Documentation](#)")

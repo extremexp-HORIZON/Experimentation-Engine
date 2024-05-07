@@ -1,5 +1,6 @@
 import streamlit as st
 import textx
+import subprocess
 import time
 import webbrowser
 import os
@@ -9,6 +10,11 @@ sys.path.append(parent_dir)
 from classes import *
 from functions import *
 from View import *
+from itertools import product
+import random
+from dsl import dsl_exceptions
+from wf_execution import execute_wf
+
 
 def createsidebar():
     st.markdown("""<style>[data-testid=stSidebar] { background-color: #E9FCDB;}</style> """, unsafe_allow_html=True)
@@ -132,7 +138,8 @@ def main():
             workflow_model = checkDSL(target_filename)
 
             if workflow_model:
-                st.success(f"Project {project_title} created successfully!")
+                # st.success(f"Project {project_title} created successfully!")
+                st.success(f"Project {project_title} complies with the grammar and created successfully!")
 
                 with st.spinner('Loading the Workflows'):
                     time.sleep(5)
@@ -163,7 +170,10 @@ def main():
                     parsed_workflows = print_parse_workflows(workflow_model)
                     generate_assembled_workflows(parsed_workflows, assembled_workflows_data, workflow_model)
 
-                    st.markdown("[Show on Proactive](https://try.activeeon.com/automation-dashboard/#/workflow-execution)")
+
+            st.markdown("[Show on Proactive](https://try.activeeon.com/automation-dashboard/#/workflow-execution)")
+
+
 
 
 if __name__ == "__main__":

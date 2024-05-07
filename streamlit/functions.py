@@ -100,7 +100,11 @@ def get_underlying_tasks(t, assembled_wf, tasks_to_add):
 
 
 def flatten_workflows(assembled_wf):
-    st.write(f"Flattening assembled workflow with name {assembled_wf.name}")
+
+    st.divider()
+    st.write(f"<span style='color:#007bff; font-size: 24px; text-align: center;'>Flattening assembled workflow with name {assembled_wf.name}</span>", unsafe_allow_html=True)
+    st.divider()
+
     new_wf = Workflow(assembled_wf.name)
     for t in assembled_wf.tasks:
         if t.sub_workflow:
@@ -173,6 +177,10 @@ def run_grid_search_exp(assembled_flat_wfs,vp_method):
     combinations = generate_parameter_combinations(vp_method["vps"])
     st.write(f"Grid search generated {len(combinations)} configurations to run.")
     st.write(combinations)
+
+    st.markdown("""<h1 style="text-align: center; font-size: 36px; color: #007bff;">EXECUTING WORKFLOWS</h1>
+                                      <hr style="border: 0; height: 1px; background-color: #333; margin: 1em 0;">""",
+                unsafe_allow_html=True)
     run_count = 1
     for c in combinations:
         st.write(f"Run {run_count}")
@@ -210,9 +218,9 @@ def run_experiment(assembled_flat_wfs,vp_method):
         run_random_search_exp(assembled_flat_wfs,vp_method)
 
 def execute_wf(w):
-    st.divider()
-    st.write(f"Executing workflow {w.name}")
-    st.divider()
+    # st.divider()
+    # st.write(f"Executing workflow {w.name}")
+    # st.divider()
     w.print()
     st.divider()
 
@@ -336,10 +344,10 @@ def print_assembled_wf_data(workflow_model):
 def generate_assembled_workflows(parsed_workflows, assembled_workflows_data,workflow_model):
     assembled_wfs = generate_final_assembled_workflows(parsed_workflows, assembled_workflows_data)
 
-    st.divider()
-    for wf in assembled_wfs:
-        wf.print()
-    st.divider()
+    # st.divider()
+    # for wf in assembled_wfs:
+    #     wf.print()
+    # st.divider()
 
     assembled_flat_wfs = []
 
@@ -352,8 +360,11 @@ def generate_assembled_workflows(parsed_workflows, assembled_workflows_data,work
 
     for espace in workflow_model.espaces:
         vp_methods = []
+        st.markdown("""<h1 style="text-align: center; font-size: 36px; color: #007bff;">EXPERIMENT SPACE </h1>
+                                                            <hr style="border: 0; height: 1px; background-color: #333; margin: 1em 0;">""",
+                    unsafe_allow_html=True)
 
-        print(f"Experiment Space '{espace.name}' of '{espace.assembled_workflow.name}'")
+        st.write(f"Experiment Space '{espace.name}' of '{espace.assembled_workflow.name}'")
 
         for m in espace.configure.methods:
             vp_method = {}
@@ -366,7 +377,7 @@ def generate_assembled_workflows(parsed_workflows, assembled_workflows_data,work
             vp_method["tasks"] = {}
             if m.runs:
                 vp_method["runs"] = m.runs
-            print(f"Method with name '{m.name}' of type '{m.type}'")
+            st.write(f"Method with name '{m.name}' of type '{m.type}'")
 
         for vp in espace.configure.vps:
             method_name = vp.method.name
@@ -387,6 +398,10 @@ def generate_assembled_workflows(parsed_workflows, assembled_workflows_data,work
                     tasks[task.alias.name][c.name] = c.vp
 
         st.write(vp_methods)
+
+        st.markdown("""<h1 style="text-align: center; font-size: 36px; color: #007bff;">RUNNING EXPERIMENTS</h1>
+                                                            <hr style="border: 0; height: 1px; background-color: #333; margin: 1em 0;">""",
+                    unsafe_allow_html=True)
 
         for vp_method in vp_methods:
             run_experiment(assembled_flat_wfs,vp_method)
