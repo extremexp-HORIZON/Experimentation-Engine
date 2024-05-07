@@ -44,6 +44,10 @@ def create_python_task(gateway, task_name, fork_environment, task_impl, input_fi
     task.setTaskName(task_name)
     task.setTaskImplementationFromFile(task_impl)
     task.setForkEnvironment(fork_environment)
+    # TODO Remove the next three lines after adding output files to the DSL
+    if task_name == "TrainModel":
+        print("inside TrainModel, adding output file")
+        task.addOutputFile('datasets/**')
     for input_file in input_files:
         task.addInputFile(input_file)
     for dependency in dependencies:
@@ -67,9 +71,32 @@ def submit_job_and_retrieve_results_and_outputs(gateway, job):
     job_id = gateway.submitJobWithInputsAndOutputsPaths(job, debug=False)
     print("job_id: " + str(job_id))
 
+    import time
+    is_finished = False
+    seconds = 0
+    while not is_finished:
+        # Get the current state of the job
+        job_status = gateway.getJobStatus(job_id)
+        # task_status = gateway.getTaskStatus(job_id)
+        
+        # Print the current job status
+        print(f"Current job status: {job_status}: {seconds}")
+        # Check if the job has finished
+        if job_status.upper() in ["FINISHED", "CANCELED", "FAILED"]:
+            is_finished = True
+        else:
+            # Wait for a few seconds before checking again
+            seconds += 1
+            time.sleep(1)
+
     print("Getting job results...")
     job_result = gateway.getJobResult(job_id, 300000)
     print(job_result)
+    # task_result = gateway.getTaskResult(job_id, "TrainModel", 300000)
+    # print(task_result)
+
+    result_map = dict(gateway.waitForJob(job_id, 300000).getResultMap())
+    print(result_map)
 
     print("Getting job outputs...")
     job_outputs = gateway.printJobOutput(job_id, 300000)

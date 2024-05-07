@@ -35,9 +35,9 @@ hidden_units = config_rnn["model_parameters"]["hidden_units"]
 
 # Number of epochs and batch_size
 # epochs = 2
-# batch_size = 64
 epochs = int(variables.get("epochs"))
-batch_size = int(variables.get("batch_size"))
+batch_size = 64
+# batch_size = int(variables.get("batch_size"))
 
 n_timestamps, n_features = ph.load_datasets(variables, "n_timestamps", "n_features")
 X_train, y_train = ph.load_datasets(variables, "X_train", "y_train")
@@ -70,4 +70,4 @@ history_rnn = model_rnn.model_fitting(model_rnn.model, X_train, y_train, X_test,
 
 # Model evaluation
 Y_pad = np.asarray(Y_pad)
-model_rnn.model_evaluation(model_rnn.model, X_pad, Y_pad, X_test, y_test)
+result, resultMap = model_rnn.model_evaluation(model_rnn.model, X_pad, Y_pad, X_test, y_test, variables, resultMap)

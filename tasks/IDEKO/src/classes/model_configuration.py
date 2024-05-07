@@ -109,7 +109,7 @@ class ModelConfiguration():
 
         return history
 
-    def model_evaluation(self, model, X, y, X_test, y_test):
+    def model_evaluation(self, model, X, y, X_test, y_test, myvariables, myresultMap):
         ''' Function to evaluate the model on the entire dataset and on the test set.
 
         Parameters (input):
@@ -130,7 +130,54 @@ class ModelConfiguration():
         for metric, value in model_metrics_test.items():
             logger.info("model_evaluation(): %s of the test data: %s" %(metric, value))
 
-        return None
+        # TODO cleanup the code below
+        # *************************
+        # *************************
+        # *************************
+        DIRECTORY = 'datasets/outputs'
+        RESULT_FILE = DIRECTORY + "/file_count.csv"
+
+        import os
+        if not os.path.exists(DIRECTORY):
+            os.makedirs(DIRECTORY)
+
+        import csv
+        with open(RESULT_FILE, 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(['bblabla', 652090, 'AF', 'AFG'])
+
+        # Specify the directory you want to list, '.' for the current directory
+        self.list_files_and_folders('.')
+
+        import json
+        id = int(myvariables.get('PA_TASK_ID'))
+        name = str(myvariables.get('PA_TASK_NAME'))
+        data = {
+            'ID': id,
+            'Name': name
+        }
+        myresult = json.dumps(data)
+
+        myresultMap.put("T1_RESULT_JSON", myresult)
+        myresultMap.put("T1_ID", id)
+        myresultMap.put("T1_Name", name)
+        print("Task ", name, " completed")
+        # *************************
+        # *************************
+        # *************************
+
+        return myresult, myresultMap
+
+    def list_files_and_folders(self, directory):
+        import os
+        for root, dirs, files in os.walk(directory):
+            path = root.split(os.sep)
+            print((len(path) - 1) * '---', os.path.basename(root))
+            for file in files:
+                print(len(path) * '---', file)
+
+
+
 
     def model_prediction(self, model, X, threshold = 0.5):
         ''' Function to compute predictions (class 0 or class 1).
