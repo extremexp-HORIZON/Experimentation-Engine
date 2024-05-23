@@ -2,11 +2,22 @@ workflow IDEKO_V1 {
 
   define task ReadData;
   define task AddPadding;
+  define task SayHello;
   define task SplitData;
   define task TrainModel;
   //define task EvaluateModel;
 
-  START -> ReadData -> AddPadding -> SplitData -> TrainModel  -> END;
+  define operator op1;
+
+  // START -> ReadData -> AddPadding -> SplitData -> TrainModel  -> END;
+  START -> ReadData;
+  ReadData -> "True" ? AddPadding : SayHello -> SplitData;
+
+  //AddPadding -> SplitData;
+  //SayHello -> SplitData;
+
+  SplitData -> TrainModel  -> END;
+
 
   configure task ReadData {
     implementation "tasks/IDEKO/read_data.py";
@@ -15,6 +26,11 @@ workflow IDEKO_V1 {
 
   configure task AddPadding {
       implementation "tasks/IDEKO/add_padding.py";
+      dependency "tasks/IDEKO/src/**";
+    }
+
+  configure task SayHello {
+      implementation "tasks/IDEKO/say_hello.py";
       dependency "tasks/IDEKO/src/**";
     }
 
@@ -77,7 +93,7 @@ espace NNExpSpace of IDEKO_V1_RNN {
     configure self {
         method gridsearch as g;
         // the onces below are training parameter, but also structural parameters could be used
-        g.epochs_vp = enum(2, 3);
+        g.epochs_vp = enum(1);
         g.batch_size_vp = enum(64, 128);
     }
 

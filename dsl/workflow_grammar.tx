@@ -56,7 +56,7 @@ ConfigureData:
         'path' path=STRING';'
     '}';
 
-Operator: 'operator' name=ID ';';
+Operator: 'define operator' name=ID ';';
 
 DefineData: 'define data' name=ID '[''data=' data*=[Value][','] '];'  | 'define data' name=ID ';' ;
 
@@ -67,7 +67,8 @@ DataLink:
     initial=[Data] ('-->' rest=[Node])* ';'
 ;
 
-ConditionLink: node=[Node] '?->' node=[Node] '[condition=' STRING '];';
+
+ConditionLink: from_node=[Node] '->' condition=STRING '?' if_node=[Node]  ':' else_node=[Node] '->' continuation_Node=[Node] ';';
 
 GroupTask:  'group' name=ID '{' node+=[Node]* '};' ;
 

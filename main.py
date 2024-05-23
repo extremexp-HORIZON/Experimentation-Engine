@@ -27,7 +27,28 @@ class WorkflowTask():
         self.input_files = []
         self.output_files = []
         self.dependencies = []
+        self.conditional_dependencies = []
         self.name = name
+        self.task_if = None
+        self.task_else = None
+        self.task_continuation = None
+        self.condition = None
+        self.flow_script = None
+
+    def add_conditional_dependency(self, task, condition):
+        self.conditional_dependencies.append((task, condition))
+
+    def set_conditional_tasks(self, task_if, task_else, task_continuation, condition):
+        self.task_if = task_if
+        self.task_else = task_else
+        self.task_continuation = task_continuation
+        self.condition = condition
+
+    def setFlowScript(self, flow_script):
+        self.flow_script = flow_script
+
+    def is_condition_task(self):
+        return self.condition is not None
 
     def add_implementation_file(self, impl_file):
         self.impl_file = impl_file
@@ -61,6 +82,10 @@ class WorkflowTask():
         new_t.output_files = self.output_files
         new_t.set_order(self.order)
         new_t.params = self.params
+        new_t.condition = self.condition
+        new_t.task_if = self.task_if
+        new_t.task_else = self.task_else
+        new_t.task_continuation = self.task_continuation
         return new_t
 
     def print(self, tab=""):
@@ -73,6 +98,10 @@ class WorkflowTask():
         print(f"{tab}\twith outputs: {self.output_files}")
         print(f"{tab}\twith order: {self.order}")
         print(f"{tab}\twith params: {self.params}")
+        print(f"{tab}\twith condition: {self.condition}")
+        print(f"{tab}\twith task_if: {self.task_if}")
+        print(f"{tab}\twith task_else: {self.task_else}")
+        print(f"{tab}\twith task_continuation: {self.task_continuation}")
 
 
 class Workflow():
@@ -130,7 +159,7 @@ def process_dependencies(task_dependencies, nodes, parsing_node_type, verbose_lo
             print(str(n2.name), ' depends on ', str(n1))
         if n2.name in task_dependencies:
             print(f"{parsing_node_type}: Double dependency ({n2.name}), check your specification")
-            exit(0)
+            # exit(0)
         else:
             # TODO what about tasks with multiple dependencies?
             task_dependencies[n2.name] = [n1.name]
@@ -246,6 +275,9 @@ def generate_final_assembled_workflows(wfs, assembled_wfs_data):
         new_wfs.append(wf)
         print(wf.name)
         for task in wf.tasks:
+            print("^^^^^^")
+            print(task.condition)
+            print("^^^^^^")
             if task.name in assembled_wf_data["tasks"].keys():
                 print(f"Need to configure task '{task.name}'")
                 task_data = assembled_wf_data["tasks"][task.name]
@@ -374,7 +406,23 @@ for workflow in workflow_model.workflows:
         if e.__class__.__name__ == "DataLink":
             add_input_output_data(wf, [e.initial] + e.rest)
 
-    apply_task_dependencies_and_set_order(wf, task_dependencies)
+        if e.__class__.__name__ == "ConditionLink":
+            condition = e.condition
+            fromNode = e.from_node
+            ifNode = e.if_node
+            elseNode = e.else_node
+            contNode = e.continuation_Node
+
+            conditional_task = wf.get_task(e.from_node.name)
+            conditional_task.set_conditional_tasks(ifNode.name,elseNode.name,contNode.name,condition)
+            # conditional_task.task_if = ifNode.name
+            # conditional_task.task_else = elseNode.name
+            # conditional_task.task_continuation = contNode.name
+            # conditional_task.condition = condition
+
+
+
+apply_task_dependencies_and_set_order(wf, task_dependencies)
 
 set_is_main_attribute(parsed_workflows)
 
