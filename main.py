@@ -29,23 +29,19 @@ class WorkflowTask():
         self.dependencies = []
         self.conditional_dependencies = []
         self.name = name
-        self.task_if = None
-        self.task_else = None
-        self.task_continuation = None
+        self.if_task_name = None
+        self.else_task_name = None
+        self.continuation_task_name = None
         self.condition = None
-        self.flow_script = None
 
     def add_conditional_dependency(self, task, condition):
         self.conditional_dependencies.append((task, condition))
 
     def set_conditional_tasks(self, task_if, task_else, task_continuation, condition):
-        self.task_if = task_if
-        self.task_else = task_else
-        self.task_continuation = task_continuation
+        self.if_task_name = task_if
+        self.else_task_name = task_else
+        self.continuation_task_name = task_continuation
         self.condition = condition
-
-    def setFlowScript(self, flow_script):
-        self.flow_script = flow_script
 
     def is_condition_task(self):
         return self.condition is not None
@@ -83,9 +79,9 @@ class WorkflowTask():
         new_t.set_order(self.order)
         new_t.params = self.params
         new_t.condition = self.condition
-        new_t.task_if = self.task_if
-        new_t.task_else = self.task_else
-        new_t.task_continuation = self.task_continuation
+        new_t.if_task_name = self.if_task_name
+        new_t.else_task_name = self.else_task_name
+        new_t.continuation_task_name = self.continuation_task_name
         return new_t
 
     def print(self, tab=""):
@@ -99,9 +95,9 @@ class WorkflowTask():
         print(f"{tab}\twith order: {self.order}")
         print(f"{tab}\twith params: {self.params}")
         print(f"{tab}\twith condition: {self.condition}")
-        print(f"{tab}\twith task_if: {self.task_if}")
-        print(f"{tab}\twith task_else: {self.task_else}")
-        print(f"{tab}\twith task_continuation: {self.task_continuation}")
+        print(f"{tab}\twith if_task_name: {self.if_task_name}")
+        print(f"{tab}\twith else_task_name: {self.else_task_name}")
+        print(f"{tab}\twith continuation_task_name: {self.continuation_task_name}")
 
 
 class Workflow():

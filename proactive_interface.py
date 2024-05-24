@@ -51,6 +51,7 @@ def create_python_task(gateway, task_name, fork_environment, task_impl, input_fi
     for input_file in input_files:
         task.addInputFile(input_file)
     for dependency in dependencies:
+        print(f"Adding dependency of '{task_name}' to '{dependency.getTaskName()}'")
         task.addDependency(dependency)
     task.setPreciousResult(is_precious_result)
     print("Task created.")
@@ -58,11 +59,30 @@ def create_python_task(gateway, task_name, fork_environment, task_impl, input_fi
 
 
 def configure_task(task, configurations):
+    print(f"Configuring task {task.getTaskName()}")
     for k in configurations.keys():
         value = configurations[k]
         if type(value) == int:
             value = str(value)
         task.addVariable(k, value)
+
+
+def create_flow_script(gateway, condition_task_name, if_task_name, else_task_name, continuation_task_name, condition):
+    branch_script = """
+if """ + condition + """:
+    branch = "if"
+else:
+    branch = "else"
+    """
+    print(f"Creating flow script for condition task {condition_task_name}")
+    flow_script = gateway.createBranchFlowScript(
+        branch_script,
+        if_task_name,
+        else_task_name,
+        continuation_task_name,
+        script_language=proactive.ProactiveScriptLanguage().python()
+    )
+    return flow_script
 
 
 def submit_job_and_retrieve_results_and_outputs(gateway, job):
