@@ -11,7 +11,7 @@ workflow IDEKO_V1 {
 
   // START -> ReadData -> AddPadding -> SplitData -> TrainModel  -> END;
   START -> ReadData;
-  ReadData -> "True" ? AddPadding : SayHello -> SplitData;
+  ReadData -> "AAA" ? AddPadding : SayHello -> SplitData;
 
   //AddPadding -> SplitData;
   //SayHello -> SplitData;
