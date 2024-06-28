@@ -12,7 +12,6 @@ experiment Step13 {
         type automated;
         // event "the accuracy of the 5 lastly trained ML models is > 50%"
         task check_accuracy_over_workflows_of_last_space;
-    }
 
     space S1 of AW1 {
         strategy gridsearch;
@@ -47,6 +46,14 @@ experiment Step13 {
         }
     }
 
+
+
+
+
+
+
+
+
 }
 
 workflow AW1 from WF1 {
@@ -70,10 +77,10 @@ workflow WF1 {
 
   define operator op1;
 
-  define metric M1 {
-    datatype double;
+  //define metric M1 {
+    //datatype double;
 //  type accuracy; // recall, true_positive_rate, ...
-  };
+ // };
 
   START -> ReadData -> AddPadding -> SplitData -> TrainModel  -> END;
 
@@ -85,13 +92,13 @@ workflow WF1 {
   configure task AddPadding {
       implementation "tasks/IDEKO/add_padding.py";
       dependency "tasks/IDEKO/src/**";
-      generates M1;
+      //generates M1;
     }
 
   configure task SplitData {
       implementation "tasks/IDEKO/split_data.py";
       dependency "tasks/IDEKO/src/**";
-      generates acc_model1;
+      //generates acc_model1;
   }
 
   configure task TrainModel {

@@ -3,13 +3,13 @@ experiment Step14 {
     intent FindBestClassifier;
 
     control {
-        S1 -> S2 [E1 after 0.50 completion, blocking]; // blocking happens after scheduling, E1 after completion
-        // or: S1 -> E1 -> S2;
+        //S1 -> S2 [E1 after 0.50 completion, blocking]; // blocking happens after scheduling, E1 after completion
+        S1 -> E1 -> S2;
     }
 
-    control {
-        S1 -> S2 || E1;
-    }
+    //control {
+     //   S1 -> S2 || E1;
+   // }
 
     event E1 {
         type manual;
@@ -65,10 +65,10 @@ workflow WF1 {
 
   define operator op1;
 
-  define metric M1 {
-    datatype double;
+ // define metric M1 {
+  //  datatype double;
 //  type accuracy; // recall, true_positive_rate, ...
-  };
+ // };
 
   START -> ReadData -> AddPadding -> SplitData -> TrainModel  -> END;
 
@@ -80,13 +80,13 @@ workflow WF1 {
   configure task AddPadding {
       implementation "tasks/IDEKO/add_padding.py";
       dependency "tasks/IDEKO/src/**";
-      generates M1;
+     // generates M1;
     }
 
   configure task SplitData {
       implementation "tasks/IDEKO/split_data.py";
       dependency "tasks/IDEKO/src/**";
-      generates acc_model1;
+     // generates acc_model1;
   }
 
   configure task TrainModel {
