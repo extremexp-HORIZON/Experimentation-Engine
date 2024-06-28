@@ -2,20 +2,89 @@ experiment EXP {
 
     intent FindBestClassifier;
 
-    strategy sequential { // other option is e.g. "parallel"
-        order [S1, E1, S2]; // optional; if not provided then in order of appearance in the file
-//        event "the accuracy of the 5 lastly trained ML models is < 50%"
-    }
-
-    event E1 {
-        type user_driven;
-        task check_and_confirm;
+    // ----------------------------
+    // step 13
+    // ----------------------------
+    control {
+        S1 -> E1;
+        E1 ?-> S2 { condition "True"}
+        E1 ?-> S3 { condition "False"}
     }
 
     event E1 {
         type automated;
-        task check_accuracy;
+        // event "the accuracy of the 5 lastly trained ML models is > 50%"
+        task check_accuracy_over_workflows_of_last_space;
     }
+
+    space S1 of AW1 {
+        strategy gridsearch;
+        param epochs_vp = range(100,105);
+        param batch_size_vp = enum(64, 128);
+
+        configure task TrainModel {
+             param epochs = epochs_vp;
+             param batch_size = batch_size_vp;
+        }
+    }
+
+    space S2 of AW1 {
+        strategy gridsearch;
+        param epochs_vp = enum(100, 110, 120);
+        param batch_size_vp = enum(64, 128);
+
+        configure task TrainModel {
+             param epochs = epochs_vp;
+             param batch_size = batch_size_vp;
+        }
+    }
+
+    space S2 of AW2 {
+        strategy gridsearch;
+        param epochs_vp = enum(100, 110, 120);
+        param batch_size_vp = enum(64, 128);
+
+        configure task TrainModel {
+             param epochs = epochs_vp;
+             param batch_size = batch_size_vp;
+        }
+    }
+    // ----------------------------
+
+    // ----------------------------
+    // step 14
+    // ----------------------------
+    control {
+        S1 -> E1 -> S2;
+    }
+
+    event E1 {
+        type manual;
+        task reorder_next_space_if_needed; // This is fragile at this point.
+    }
+
+    space S1 of AW1 {
+        strategy gridsearch;
+        param epochs_vp = range(100,105);
+        param batch_size_vp = enum(64, 128);
+
+        configure task TrainModel {
+             param epochs = epochs_vp;
+             param batch_size = batch_size_vp;
+        }
+    }
+
+    space S2 of AW1 {
+        strategy gridsearch;
+        param epochs_vp = enum(100, 110, 120);
+        param batch_size_vp = enum(64, 128);
+
+        configure task TrainModel {
+             param epochs = epochs_vp;
+             param batch_size = batch_size_vp;
+        }
+    }
+    // ----------------------------
 
     space S1 of AW1 {
         strategy gridsearch; // first comes the strategy, then the parameters
@@ -29,6 +98,7 @@ experiment EXP {
              param epochs = epochs_vp;
              param batch_size = batch_size_vp;
         }
+
     }
 
     space S2 of AW2 {
