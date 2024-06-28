@@ -45,15 +45,6 @@ experiment Step13 {
              param batch_size = batch_size_vp;
         }
     }
-
-
-
-
-
-
-
-
-
 }
 
 workflow AW1 from WF1 {
