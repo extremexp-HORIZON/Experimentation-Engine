@@ -83,7 +83,7 @@ experiment EXP {
 
     event E1 {
         type automated;
-        condition "the accuracy of the 5 lastly trained ML models is > 50%"
+        condition "the accuracy of the 5 lastly trained ML models is > 50%";
         task check_accuracy_over_workflows_of_last_space;
     }
 

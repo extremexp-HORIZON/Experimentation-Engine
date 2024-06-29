@@ -47,7 +47,7 @@ workflow AW2 from WF1 {
 
 
 
-experiment EXP {
+experiment EXP1 {
 
     intent FindBestClassifier;
 
@@ -84,3 +84,4 @@ experiment EXP {
 }
 
 
+experiment EXP2 {}

@@ -93,6 +93,7 @@ ExperimentNode: SpaceConfig | Event;
 Event:
         'event' name=ID '{'
             'type' eventType=EventType ';'
+            ('condition' condition=STRING ';')*
             'task' validation_task=ID ';'
             ('restart' restart=BOOL ';')*
         '}';
@@ -144,7 +145,7 @@ RegularExpLink:
 ;
 
 ConditionalExpLink:
-    from=[ExperimentNode] '?->' to=[ExperimentNode] '{' 'condition' condition=STRING '}'
+    fromspace=[ExperimentNode] '?->' tospace=[ExperimentNode] '{' 'condition' condition=STRING '}'
 ;
 
 Comment: /\/\/.*$/;
