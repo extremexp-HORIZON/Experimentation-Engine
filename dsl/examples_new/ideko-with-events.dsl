@@ -79,6 +79,7 @@ experiment EXP {
         //Manual
         S4 -> E2 -> S5;
 
+        S4 -> E3;
     }
 
     event E1 {
@@ -93,6 +94,11 @@ experiment EXP {
         restart True;
     }
 
+    event E3 {
+        type automated;
+        condition "the accuracy of the 5 lastly trained ML models is > 50%";
+        task check_accuracy_over_workflows_of_last_space;
+    }
 
     space S1 of AW1 {
         strategy gridsearch;

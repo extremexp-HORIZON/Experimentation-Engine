@@ -125,6 +125,8 @@ for wf in assembled_wfs:
 print("************")
 
 printexperiments = []
+automated_events = set()
+manual_events = set()
 for component in no_events_workflow_model.component:
     if component.__class__.__name__ == 'Experiment':
         # experiments.append(component.name)
@@ -135,6 +137,10 @@ for component in no_events_workflow_model.component:
             if node.__class__.__name__ == 'Event':
                 print(f"Event: {node.name}")
                 print(f"    Type: {node.eventType}")
+                if node.eventType == 'automated':
+                    automated_events.add(node.name)
+                if node.eventType == 'manual':
+                    manual_events.add(node.name)
                 if node.condition:
                     print(f"    Condition: {node.condition}")
                 print(f"    Task: {node.validation_task}")
@@ -166,23 +172,71 @@ for component in no_events_workflow_model.component:
                                 print(f"    Param: {config.param_name} = {config.vp}")
                         print()
 
+
+
+        print(automated_events)
+        print((manual_events))
         if component.control:
             print("Control exists")
+            # for control in component.control:
+            #     for explink in control.explink:
+            #         if explink.__class__.__name__ == 'RegularExpLink':
+            #             link = f"  Regular Link: {explink.initial_space.name}"
+            #             for space in explink.spaces:
+            #                 link += f" -> {space.name}"
+            #             print(link)
+            #
+            #
+            #         elif explink.__class__.__name__ == 'ConditionalExpLink':
+            #             line = f"  Conditional Link: {explink.fromspace.name}"
+            #             line += f" ?-> {explink.tospace.name}"
+            #             line += f"  Condition: {explink.condition}"
+            #             print(line)
+            print('------------------------------------------')
+            print("Automated Events")
             for control in component.control:
                 for explink in control.explink:
                     if explink.__class__.__name__ == 'RegularExpLink':
-                        link = f"  Regular Link: {explink.initial_space.name}"
-                        for space in explink.spaces:
-                            link += f" -> {space.name}"
-                        print(link)
-
+                        if explink.initial_space.name in automated_events or any(space.name in automated_events for space in explink.spaces):
+                            for event in automated_events:
+                                if event in explink.initial_space.name or any(event in space.name for space in explink.spaces):
+                                    print()
+                                    print(f"Event: {event}")
+                                    link = f"  Regular Link: {explink.initial_space.name}"
+                                    for space in explink.spaces:
+                                        link += f" -> {space.name}"
+                                    print(link)
 
                     elif explink.__class__.__name__ == 'ConditionalExpLink':
-                        line = f"  Conditional Link: {explink.fromspace.name}"
-                        line += f" ?-> {explink.tospace.name}"
-                        line += f"  Condition: {explink.condition}"
-                        print(line)
+                        if explink.fromspace.name in automated_events or explink.tospace.name in automated_events:
+                            line = f"  Conditional Link: {explink.fromspace.name}"
+                            line += f" ?-> {explink.tospace.name}"
+                            line += f"  Condition: {explink.condition}"
+                            print(line)
 
 
 
+            print('------------------------------------------')
+            print("Manual Events")
+            for control in component.control:
+                for explink in control.explink:
+                    if explink.__class__.__name__ == 'RegularExpLink':
+                        if explink.initial_space.name in manual_events or any(space.name in manual_events for space in explink.spaces):
+                            for event in manual_events:
+                                if event in explink.initial_space.name or any(
+                                        event in space.name for space in explink.spaces):
+                                    print()
+                                    print(f"Event: {event}")
+                                    link = f"  Regular Link: {explink.initial_space.name}"
+                                    for space in explink.spaces:
+                                        link += f" -> {space.name}"
+                                    print(link)
 
+                    elif explink.__class__.__name__ == 'ConditionalExpLink':
+                        if explink.fromspace.name in manual_events or explink.tospace.name in manual_events:
+                            line = f"  Conditional Link: {explink.fromspace.name}"
+                            line += f" ?-> {explink.tospace.name}"
+                            line += f"  Condition: {explink.condition}"
+                            print(line)
+
+            print('------------------------------------------')
