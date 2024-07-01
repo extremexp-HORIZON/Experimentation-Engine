@@ -152,91 +152,89 @@ for component in no_events_workflow_model.component:
                 print(f"  Space: {node.name}")
                 print(f"    Assembled Workflow: {node.assembled_workflow.name}")
                 print(f"    Strategy: {node.strategy_name}")
+
+                if node.tasks:
+                    for task_config in node.tasks:
+                        print(f"    Task: {task_config.task.name}")
+                        for param_config in task_config.config:
+                            print(f"        Param: {param_config.param_name} = {param_config.vp}")
                 if node.vps:
                     for vp in node.vps:
-                        print(f"    VP: {vp.vp_name} = ", end="")
-                        vp_values = vp.vp_values
-                        if hasattr(vp_values, 'values'):
-                            values = ", ".join(str(v) for v in vp_values.values)
-                            print(f"enum({values});")
-                        elif hasattr(vp_values, 'min') and hasattr(vp_values, 'max'):
-                            if hasattr(vp_values, 'step'):
-                                print(f"range({vp_values.min}, {vp_values.max}, {vp_values.step});")
+                        if hasattr(vp.vp_values, 'values'):
+                            print(f"        {vp.vp_name} = enum{vp.vp_values.values};")
+
+                        elif hasattr(vp.vp_values, 'minimum') and hasattr(vp.vp_values, 'maximum'):
+                            min_value = vp.vp_values.minimum
+                            max_value = vp.vp_values.maximum
+                            step_value = getattr(vp.vp_values, 'step', None)
+                            if step_value is not None:
+                                print(f"        {vp.vp_name} = range({min_value}, {max_value}, {step_value});")
                             else:
-                                print(f"range({vp_values.min}, {vp_values.max});")
-                if node.tasks:
-                    for task in node.tasks:
-                        print(f"    Task: {task.task.name}")
-                        if task.config:
-                            for config in task.config:
-                                print(f"    Param: {config.param_name} = {config.vp}")
-                        print()
+                                print(f"        {vp.vp_name} = range({min_value}, {max_value});")
 
+                print()
 
-
-        print(automated_events)
-        print((manual_events))
         if component.control:
-            print("Control exists")
-            # for control in component.control:
-            #     for explink in control.explink:
-            #         if explink.__class__.__name__ == 'RegularExpLink':
-            #             link = f"  Regular Link: {explink.initial_space.name}"
-            #             for space in explink.spaces:
-            #                 link += f" -> {space.name}"
-            #             print(link)
-            #
-            #
-            #         elif explink.__class__.__name__ == 'ConditionalExpLink':
-            #             line = f"  Conditional Link: {explink.fromspace.name}"
-            #             line += f" ?-> {explink.tospace.name}"
-            #             line += f"  Condition: {explink.condition}"
-            #             print(line)
-            print('------------------------------------------')
-            print("Automated Events")
-            for control in component.control:
-                for explink in control.explink:
-                    if explink.__class__.__name__ == 'RegularExpLink':
-                        if explink.initial_space.name in automated_events or any(space.name in automated_events for space in explink.spaces):
-                            for event in automated_events:
-                                if event in explink.initial_space.name or any(event in space.name for space in explink.spaces):
-                                    print()
-                                    print(f"Event: {event}")
-                                    link = f"  Regular Link: {explink.initial_space.name}"
-                                    for space in explink.spaces:
-                                        link += f" -> {space.name}"
-                                    print(link)
+                print("Control exists")
+                # for control in component.control:
+                #     for explink in control.explink:
+                #         if explink.__class__.__name__ == 'RegularExpLink':
+                #             link = f"  Regular Link: {explink.initial_space.name}"
+                #             for space in explink.spaces:
+                #                 link += f" -> {space.name}"
+                #             print(link)
+                #
+                #
+                #         elif explink.__class__.__name__ == 'ConditionalExpLink':
+                #             line = f"  Conditional Link: {explink.fromspace.name}"
+                #             line += f" ?-> {explink.tospace.name}"
+                #             line += f"  Condition: {explink.condition}"
+                #             print(line)
+                print('------------------------------------------')
+                print("Automated Events")
+                for control in component.control:
+                    for explink in control.explink:
+                        if explink.__class__.__name__ == 'RegularExpLink':
+                            if explink.initial_space.name in automated_events or any(space.name in automated_events for space in explink.spaces):
+                                for event in automated_events:
+                                    if event in explink.initial_space.name or any(event in space.name for space in explink.spaces):
+                                        print()
+                                        print(f"Event: {event}")
+                                        link = f"  Regular Link: {explink.initial_space.name}"
+                                        for space in explink.spaces:
+                                            link += f" -> {space.name}"
+                                        print(link)
 
-                    elif explink.__class__.__name__ == 'ConditionalExpLink':
-                        if explink.fromspace.name in automated_events or explink.tospace.name in automated_events:
-                            line = f"  Conditional Link: {explink.fromspace.name}"
-                            line += f" ?-> {explink.tospace.name}"
-                            line += f"  Condition: {explink.condition}"
-                            print(line)
+                        elif explink.__class__.__name__ == 'ConditionalExpLink':
+                            if explink.fromspace.name in automated_events or explink.tospace.name in automated_events:
+                                line = f"  Conditional Link: {explink.fromspace.name}"
+                                line += f" ?-> {explink.tospace.name}"
+                                line += f"  Condition: {explink.condition}"
+                                print(line)
 
 
 
-            print('------------------------------------------')
-            print("Manual Events")
-            for control in component.control:
-                for explink in control.explink:
-                    if explink.__class__.__name__ == 'RegularExpLink':
-                        if explink.initial_space.name in manual_events or any(space.name in manual_events for space in explink.spaces):
-                            for event in manual_events:
-                                if event in explink.initial_space.name or any(
-                                        event in space.name for space in explink.spaces):
-                                    print()
-                                    print(f"Event: {event}")
-                                    link = f"  Regular Link: {explink.initial_space.name}"
-                                    for space in explink.spaces:
-                                        link += f" -> {space.name}"
-                                    print(link)
+                print('------------------------------------------')
+                print("Manual Events")
+                for control in component.control:
+                    for explink in control.explink:
+                        if explink.__class__.__name__ == 'RegularExpLink':
+                            if explink.initial_space.name in manual_events or any(space.name in manual_events for space in explink.spaces):
+                                for event in manual_events:
+                                    if event in explink.initial_space.name or any(
+                                            event in space.name for space in explink.spaces):
+                                        print()
+                                        print(f"Event: {event}")
+                                        link = f"  Regular Link: {explink.initial_space.name}"
+                                        for space in explink.spaces:
+                                            link += f" -> {space.name}"
+                                        print(link)
 
-                    elif explink.__class__.__name__ == 'ConditionalExpLink':
-                        if explink.fromspace.name in manual_events or explink.tospace.name in manual_events:
-                            line = f"  Conditional Link: {explink.fromspace.name}"
-                            line += f" ?-> {explink.tospace.name}"
-                            line += f"  Condition: {explink.condition}"
-                            print(line)
+                        elif explink.__class__.__name__ == 'ConditionalExpLink':
+                            if explink.fromspace.name in manual_events or explink.tospace.name in manual_events:
+                                line = f"  Conditional Link: {explink.fromspace.name}"
+                                line += f" ?-> {explink.tospace.name}"
+                                line += f"  Condition: {explink.condition}"
+                                print(line)
 
-            print('------------------------------------------')
+                print('------------------------------------------')

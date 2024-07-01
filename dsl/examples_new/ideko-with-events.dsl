@@ -79,7 +79,7 @@ experiment EXP {
         //Manual
         S4 -> E2 -> S5;
 
-        S4 -> E3;
+        S4 -> E3; // checking for multiple events
     }
 
     event E1 {

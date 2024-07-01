@@ -111,14 +111,19 @@ Strategy: 'gridsearch' |  'randomsearch';
 
 
 VP:
-    'param' vp_name=ID '=' vp_values=VP_values
+    'param' vp_name=ID '=' vp_values=VP_value
 ;
 
-VP_values:
+VP_value: ENUM | RANGE;
+
+ENUM:
     'enum(' values+=INT [','] ')' ';' |
-    'enum(' values+=STRING [','] ')' ';' |
-    'range(' min=INT ',' max=INT ')' ';' |
-    'range(' min=INT ',' max=INT',' step=INT ');'
+    'enum(' values+=STRING [','] ')' ';'
+;
+
+RANGE:
+    'range(' minimum=INT ',' maximum=INT ')' ';' |
+    'range(' minimum=INT ',' maximum=INT',' step=INT ');'
 
 ;
 
