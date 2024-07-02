@@ -1,5 +1,7 @@
 import os
 import textx
+import itertools
+from collections import deque
 from classes import *
 from functions import *
 
@@ -124,9 +126,26 @@ for wf in assembled_wfs:
 
 print("************")
 
+print("*********************************************************")
+print("************ GENERATE ASSEMBLED FLAT WORKFLOWS ***************")
+print("*********************************************************")
+
+assembled_flat_wfs = []
+
+for wf in assembled_wfs:
+    flat_wf = flatten_workflows(wf)
+    assembled_flat_wfs.append(flat_wf)
+    flat_wf.print()
+
+print("************")
+
 printexperiments = []
 automated_events = set()
 manual_events = set()
+space_configs = []
+automated_queue = []
+manual_queue = []
+
 for component in no_events_workflow_model.component:
     if component.__class__.__name__ == 'Experiment':
         # experiments.append(component.name)
@@ -153,26 +172,69 @@ for component in no_events_workflow_model.component:
                 print(f"    Assembled Workflow: {node.assembled_workflow.name}")
                 print(f"    Strategy: {node.strategy_name}")
 
+                space_config_data = {
+                    "Space": node.name,
+                    "Assembled Workflow": node.assembled_workflow.name,
+                    "Strategy": node.strategy_name,
+                    "Tasks": [],
+                    "VPs": []
+                }
+
                 if node.tasks:
                     for task_config in node.tasks:
                         print(f"    Task: {task_config.task.name}")
+                        task_data = {
+                            "Task": [task_config.task.name],
+                            "Params": []
+                        }
+
+
                         for param_config in task_config.config:
                             print(f"        Param: {param_config.param_name} = {param_config.vp}")
+                            param_data = {
+                                param_config.param_name
+                            }
+                            task_data["Params"].append(param_data)
+                        space_config_data["Tasks"].append(task_data)
+
+
+
                 if node.vps:
                     for vp in node.vps:
                         if hasattr(vp.vp_values, 'values'):
                             print(f"        {vp.vp_name} = enum{vp.vp_values.values};")
+                            vp_data = {
+                                "VP": vp.vp_name,
+                                "Values": vp.vp_values.values,
+                                "Type": "enum"
+                            }
+                            space_config_data["VPs"].append(vp_data)
 
                         elif hasattr(vp.vp_values, 'minimum') and hasattr(vp.vp_values, 'maximum'):
                             min_value = vp.vp_values.minimum
                             max_value = vp.vp_values.maximum
-                            step_value = getattr(vp.vp_values, 'step', None)
-                            if step_value is not None:
-                                print(f"        {vp.vp_name} = range({min_value}, {max_value}, {step_value});")
-                            else:
-                                print(f"        {vp.vp_name} = range({min_value}, {max_value});")
+                            step_value = getattr(vp.vp_values, 'step', 1)
+                            print(f"        {vp.vp_name} = range({min_value}, {max_value}, {step_value});")
 
-                print()
+                            vp_data = {
+                                "VP": vp.vp_name,
+                                "Minimum": min_value,
+                                "Maximum": max_value,
+                                "Step": step_value,
+                                "Type": "range"
+                            }
+                            space_config_data["VPs"].append(vp_data)
+
+
+
+
+                space_configs.append(space_config_data)
+
+
+
+            print()
+
+
 
         if component.control:
                 print("Control exists")
@@ -205,12 +267,22 @@ for component in no_events_workflow_model.component:
                                             link += f" -> {space.name}"
                                         print(link)
 
+                                        automated_queue.append(explink.initial_space.name)
+                                        for space in explink.spaces:
+                                            automated_queue.append(space.name)
+
+
                         elif explink.__class__.__name__ == 'ConditionalExpLink':
                             if explink.fromspace.name in automated_events or explink.tospace.name in automated_events:
                                 line = f"  Conditional Link: {explink.fromspace.name}"
                                 line += f" ?-> {explink.tospace.name}"
                                 line += f"  Condition: {explink.condition}"
                                 print(line)
+
+                                automated_queue.append(explink.fromspace.name)
+                                automated_queue.append(explink.tospace.name)
+
+
 
 
 
@@ -230,6 +302,10 @@ for component in no_events_workflow_model.component:
                                             link += f" -> {space.name}"
                                         print(link)
 
+                                        manual_queue.append(explink.initial_space.name)
+                                        for space in explink.spaces:
+                                            manual_queue.append(space.name)
+
                         elif explink.__class__.__name__ == 'ConditionalExpLink':
                             if explink.fromspace.name in manual_events or explink.tospace.name in manual_events:
                                 line = f"  Conditional Link: {explink.fromspace.name}"
@@ -237,4 +313,59 @@ for component in no_events_workflow_model.component:
                                 line += f"  Condition: {explink.condition}"
                                 print(line)
 
+                                manual_queue.append(explink.fromspace.name)
+                                manual_queue.append(explink.tospace.name)
+
                 print('------------------------------------------')
+
+print(automated_queue)
+print(manual_queue)
+
+
+for space_config in space_configs:
+    pp.pprint(space_config)
+    print()
+
+/
+
+
+
+grid_search_combinations = []
+for space_config in space_configs:
+    print('-------------------------------------------------------------------')
+    print(f"Running experiment of espace '{space_config['Space']}' of type '{space_config['Strategy']}'")
+    method_type = space_config["Strategy"]
+    if method_type == "gridsearch":
+        VPs = space_config["VPs"]
+        vp_combinations = []
+
+        for vp_data in VPs:
+            if vp_data["Type"] == "enum":
+                vp_name = vp_data["VP"]
+                vp_values = vp_data["Values"]
+                vp_combinations.append([(vp_name, value) for value in vp_values])
+
+            elif vp_data["Type"] == "range":
+                vp_name = vp_data["VP"]
+                min_value = vp_data["Minimum"]
+                max_value = vp_data["Maximum"]
+                step_value = vp_data.get("Step", 1) if vp_data["Step"] != 0 else 1
+                vp_values = list(range(min_value, max_value + 1, step_value))
+                vp_combinations.append([(vp_name, value) for value in vp_values])
+
+            # Generate combinations
+        combinations = list(itertools.product(*vp_combinations))
+        grid_search_combinations.extend(combinations)
+
+        print(f"\nGrid search generated {len(combinations)} configurations to run.")
+        for combination in combinations:
+
+            print(combination)
+
+
+    if method_type == "randomsearch":
+        VPs = space_config["VPs"]
+
+    print()
+
+
