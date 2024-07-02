@@ -72,14 +72,23 @@ experiment EXP {
     control {
 
         //Automated
+        START S1;
         S1 -> E1;
-        E1 ?-> S2 { condition "True"}
+        E1 ?-> S2 { condition "True"} //ADD ;
         E1 ?-> S3 { condition "False"}
 
+        S2 -> S4;
+        S3 -> S4;
+
         //Manual
-        S4 -> E2 -> S5;
+        // Note E2 is allowed to change any scheduled workflows after it
+        S4 -> E2 -> S5 -> END;
+
+        // S4 -> S5 || E2; // This an alternative to line 84. E2 is allowed to change S4 or S5 spaces at any point of time
 
         S4 -> E3; // checking for multiple events
+
+
     }
 
     event E1 {
@@ -102,7 +111,7 @@ experiment EXP {
 
     space S1 of AW1 {
         strategy gridsearch;
-        param epochs_vp = range(80,130,10);
+        param epochs_vp = range(80,100,10);
         param batch_size_vp = enum(64, 128);
 
         configure task TrainModel {
@@ -113,7 +122,7 @@ experiment EXP {
 
     space S2 of AW1 {
         strategy gridsearch;
-        param epochs_vp = range(80,130,5);
+        param epochs_vp = range(85,90);
         param batch_size_vp = enum(64, 128, 256);
 
         configure task TrainModel {
@@ -135,9 +144,10 @@ experiment EXP {
 
 
     space S4 of AW1 {
-        strategy gridsearch;
+        strategy randomsearch;
         param epochs_vp = range(100,105);
         param batch_size_vp = enum(64, 128);
+        // add runs
 
         configure task TrainModel {
              param epochs = epochs_vp;
@@ -147,13 +157,16 @@ experiment EXP {
 
     space S5 of AW1 {
         strategy gridsearch;
-        param epochs_vp = range(90,95);
+        param epochs_vp = range(100,105);
         param batch_size_vp = enum(64, 128);
 
         configure task TrainModel {
              param epochs = epochs_vp;
              param batch_size = batch_size_vp;
         }
+
+
+
     }
 }
 
