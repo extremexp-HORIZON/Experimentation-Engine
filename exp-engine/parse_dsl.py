@@ -326,8 +326,6 @@ for space_config in space_configs:
     pp.pprint(space_config)
     print()
 
-/
-
 
 
 grid_search_combinations = []
