@@ -141,16 +141,26 @@ Control:
                explink*=ExpLink
         '}';
 
-ExpLink: RegularExpLink | ConditionalExpLink;
+ExpLink:  RegularExpLink | ConditionalExpLink;
 
 RegularExpLink:
+    initial_space='START' '->' start=[ExperimentNode] ';' |'START' '->' start=[ExperimentNode]  '->' 'END' ';' |
+
     initial_space=[ExperimentNode]
-    ('->' spaces+=[ExperimentNode])+
+    '->'
+    (spaces=[ExperimentNode])+
+    ';' |
+
+    initial_space=[ExperimentNode]
+    '->'
+    (spaces=[ExperimentNode] '->')+
+    'END'
     ';'
 ;
 
+
 ConditionalExpLink:
-    fromspace=[ExperimentNode] '?->' tospace=[ExperimentNode] '{' 'condition' condition=STRING '}'
+    fromspace=[ExperimentNode] '?->' tospace=[ExperimentNode] '{' 'condition' condition=STRING '}' ';'
 ;
 
 Comment: /\/\/.*$/;

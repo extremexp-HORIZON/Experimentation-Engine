@@ -1,18 +1,154 @@
 import os
 import textx
-import itertools
-from collections import deque
 from classes import *
 from functions import *
+import itertools
+from collections import deque
+import pprint
 
-with open('../dsl/examples_new/ideko-with-events.dsl', 'r') as file:
+printexperiments = []
+nodes = set()
+automated_events = set()
+manual_events = set()
+spaces = set()
+space_configs = []
+automated_dict = {}
+manual_dict = {}
+parsed_manual_events = []
+parsed_automated_events = []
+
+
+class AutomatedEvent():
+    def __init__(self, name, task, condition):
+        self.name = name
+        self.task = task
+        self.condition = condition
+
+class ManualEvent():
+    def __init__(self, name, task, restart=False):
+        self.name = name
+        self.task = task
+        self.restart = restart
+
+
+def execute_automated_event(node):
+    print("executing automated event")
+    e = next((e for e in parsed_automated_events if e.name == node), None)
+
+    print(e.task)
+
+    module = __import__('IDEKO_events')
+    func = getattr(module, e.task)
+    ret = func([90,70,50])
+    print("--------------------------------------------------------------------")
+    return ret
+
+def execute_manual_event(node):
+    print("executing manual event")
+    e = next((e for e in parsed_manual_events if e.name == node), None)
+
+    print(e.task)
+
+    module = __import__('IDEKO_events')
+    func = getattr(module, e.task)
+    ret = func()
+    print("--------------------------------------------------------------------")
+    return ret
+
+
+def execute_space(node):
+    print("executing space")
+
+    space_config = next((s for s in space_configs if s['name'] == node), None)
+    # pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(space_config)
+    print('-------------------------------------------------------------------')
+    print(f"Running experiment of espace '{space_config['name']}' of type '{space_config['strategy']}'")
+    method_type = space_config["strategy"]
+
+    if method_type == "gridsearch":
+        run_grid_search(space_config)
+
+    if method_type == "randomsearch":
+        run_random_search()
+
+
+    return 'True'
+
+def run_grid_search(space_config):
+     grid_search_combinations = []
+     VPs = space_config["VPs"]
+     vp_combinations = []
+
+     for vp_data in VPs:
+         if vp_data["type"] == "enum":
+             vp_name = vp_data["name"]
+             vp_values = vp_data["values"]
+             vp_combinations.append([(vp_name, value) for value in vp_values])
+
+         elif vp_data["type"] == "range":
+             vp_name = vp_data["name"]
+             min_value = vp_data["min"]
+             max_value = vp_data["max"]
+             step_value = vp_data.get("step", 1) if vp_data["step"] != 0 else 1
+             vp_values = list(range(min_value, max_value + 1, step_value))
+             vp_combinations.append([(vp_name, value) for value in vp_values])
+
+         # Generate combinations
+     combinations = list(itertools.product(*vp_combinations))
+     grid_search_combinations.extend(combinations)
+
+     print(f"\nGrid search generated {len(combinations)} configurations to run.\n")
+     for combination in combinations:
+         print(combination)
+
+     run_count = 1
+     for c in combinations:
+         print(f"Run {run_count}")
+         workflow_to_run = get_workflow_to_run(space_config, c)
+         execute_wf(workflow_to_run)
+         print("..........")
+         run_count += 1
+
+
+def get_workflow_to_run(space_config, c):
+    c_dict = dict(c)
+    w = next(w for w in assembled_flat_wfs if w.name == space_config["assembled_workflow"])
+    for t in w.tasks:
+        if t.name in space_config["tasks"].keys():
+            task_config = space_config["tasks"][t.name]
+            print(task_config)
+            for param_name, param_vp in task_config.items():
+                alias = param_vp
+                print(f"Setting param '{param_name}' of task '{t.name}' to '{c_dict[alias]}'")
+                t.set_param(param_name, c_dict[alias])
+    return w
+
+def  run_random_search():
+    print("running random serach")
+
+
+def execute_node(node):
+    print(node)
+
+    if node in spaces:
+        return execute_space(node)
+
+    elif node in automated_events:
+        return  execute_automated_event(node)
+
+    elif node in manual_events:
+        return execute_manual_event(node)
+
+
+
+
+
+with open('../dsl/examples_new/ideko-with-events-test.dsl', 'r') as file:
     no_events_workflow_code = file.read()
 
 workflow_metamodel = textx.metamodel_from_file('../dsl/workflow_grammar_new.tx')
 no_events_workflow_model = workflow_metamodel.model_from_str(no_events_workflow_code)
-
-if no_events_workflow_model:
-    print('parses dsl with no events')
 
 
 print("*********************************************************")
@@ -76,16 +212,21 @@ for component in no_events_workflow_model.component:
                 conditional_task = wf.get_task(e.from_node.name)
                 conditional_task.set_conditional_tasks(ifNode.name, elseNode.name, contNode.name, condition)
 
+apply_task_dependencies_and_set_order(wf, task_dependencies)
+
+set_is_main_attribute(parsed_workflows)
+
 for wf in parsed_workflows:
             wf.print()
+
+
+print("*********************************************************")
+print("********** PARSE ASSEMBLED WORKFLOWS DATA ***************")
+print("*********************************************************")
 
 assembled_workflows_data = []
 for component in no_events_workflow_model.component:
     if component.__class__.__name__ == 'AssembledWorkflow':
-        print("*********************************************************")
-        print("********** PARSE ASSEMBLED WORKFLOWS DATA ***************")
-        print("*********************************************************")
-
         assembled_workflow_data = {}
         assembled_workflows_data.append(assembled_workflow_data)
         assembled_workflow_data["name"] = component.name
@@ -120,11 +261,11 @@ print("*********************************************************")
 
 assembled_wfs = generate_final_assembled_workflows(parsed_workflows, assembled_workflows_data)
 
-print("************")
+
 for wf in assembled_wfs:
     wf.print()
 
-print("************")
+
 
 print("*********************************************************")
 print("************ GENERATE ASSEMBLED FLAT WORKFLOWS ***************")
@@ -139,12 +280,6 @@ for wf in assembled_wfs:
 
 print("************")
 
-printexperiments = []
-automated_events = set()
-manual_events = set()
-space_configs = []
-automated_queue = []
-manual_queue = []
 
 for component in no_events_workflow_model.component:
     if component.__class__.__name__ == 'Experiment':
@@ -158,8 +293,14 @@ for component in no_events_workflow_model.component:
                 print(f"    Type: {node.eventType}")
                 if node.eventType == 'automated':
                     automated_events.add(node.name)
+                    parsed_event = AutomatedEvent(node.name,node.validation_task, node.condition)
+                    parsed_automated_events.append(parsed_event)
+
                 if node.eventType == 'manual':
                     manual_events.add(node.name)
+                    parsed_event = ManualEvent(node.name, node.validation_task, node.restart)
+                    parsed_manual_events.append(parsed_event)
+
                 if node.condition:
                     print(f"    Condition: {node.condition}")
                 print(f"    Task: {node.validation_task}")
@@ -167,35 +308,40 @@ for component in no_events_workflow_model.component:
                     print(f"    Restart: {node.restart}")
                 print()
 
+
+
+
+
             elif node.__class__.__name__ == 'SpaceConfig':
                 print(f"  Space: {node.name}")
                 print(f"    Assembled Workflow: {node.assembled_workflow.name}")
                 print(f"    Strategy: {node.strategy_name}")
 
+                spaces.add(node.name)
+
                 space_config_data = {
-                    "Space": node.name,
-                    "Assembled Workflow": node.assembled_workflow.name,
-                    "Strategy": node.strategy_name,
-                    "Tasks": [],
+                    "name": node.name,
+                    "assembled_workflow": node.assembled_workflow.name,
+                    "strategy": node.strategy_name,
+                    "tasks": {},
                     "VPs": []
                 }
 
                 if node.tasks:
                     for task_config in node.tasks:
-                        print(f"    Task: {task_config.task.name}")
-                        task_data = {
-                            "Task": [task_config.task.name],
-                            "Params": []
-                        }
+                            print(f"    Task: {task_config.task.name}")
+                            task_name = task_config.task.name
+                            task_data = {}
 
 
-                        for param_config in task_config.config:
-                            print(f"        Param: {param_config.param_name} = {param_config.vp}")
-                            param_data = {
-                                param_config.param_name
-                            }
-                            task_data["Params"].append(param_data)
-                        space_config_data["Tasks"].append(task_data)
+                            for param_config in task_config.config:
+                                print(f"        Param: {param_config.param_name} = {param_config.vp}")
+                                param_name = param_config.param_name
+                                param_vp = param_config.vp
+
+                                task_data[param_name] = param_vp
+
+                            space_config_data["tasks"][task_name] = task_data
 
 
 
@@ -204,9 +350,9 @@ for component in no_events_workflow_model.component:
                         if hasattr(vp.vp_values, 'values'):
                             print(f"        {vp.vp_name} = enum{vp.vp_values.values};")
                             vp_data = {
-                                "VP": vp.vp_name,
-                                "Values": vp.vp_values.values,
-                                "Type": "enum"
+                                "name": vp.vp_name,
+                                "values": vp.vp_values.values,
+                                "type": "enum"
                             }
                             space_config_data["VPs"].append(vp_data)
 
@@ -217,11 +363,11 @@ for component in no_events_workflow_model.component:
                             print(f"        {vp.vp_name} = range({min_value}, {max_value}, {step_value});")
 
                             vp_data = {
-                                "VP": vp.vp_name,
-                                "Minimum": min_value,
-                                "Maximum": max_value,
-                                "Step": step_value,
-                                "Type": "range"
+                                "name": vp.vp_name,
+                                "min": min_value,
+                                "max": max_value,
+                                "step": step_value,
+                                "type": "range"
                             }
                             space_config_data["VPs"].append(vp_data)
 
@@ -234,56 +380,73 @@ for component in no_events_workflow_model.component:
 
             print()
 
-
+        nodes = automated_events | manual_events | spaces
 
         if component.control:
                 print("Control exists")
-                # for control in component.control:
-                #     for explink in control.explink:
-                #         if explink.__class__.__name__ == 'RegularExpLink':
-                #             link = f"  Regular Link: {explink.initial_space.name}"
-                #             for space in explink.spaces:
-                #                 link += f" -> {space.name}"
-                #             print(link)
-                #
-                #
-                #         elif explink.__class__.__name__ == 'ConditionalExpLink':
-                #             line = f"  Conditional Link: {explink.fromspace.name}"
-                #             line += f" ?-> {explink.tospace.name}"
-                #             line += f"  Condition: {explink.condition}"
-                #             print(line)
                 print('------------------------------------------')
                 print("Automated Events")
                 for control in component.control:
                     for explink in control.explink:
                         if explink.__class__.__name__ == 'RegularExpLink':
-                            if explink.initial_space.name in automated_events or any(space.name in automated_events for space in explink.spaces):
-                                for event in automated_events:
-                                    if event in explink.initial_space.name or any(event in space.name for space in explink.spaces):
-                                        print()
-                                        print(f"Event: {event}")
-                                        link = f"  Regular Link: {explink.initial_space.name}"
-                                        for space in explink.spaces:
-                                            link += f" -> {space.name}"
-                                        print(link)
+                            if explink.initial_space and explink.spaces:
+                                initial_space_name = explink.initial_space.name
 
-                                        automated_queue.append(explink.initial_space.name)
-                                        for space in explink.spaces:
-                                            automated_queue.append(space.name)
+                                if any(event in initial_space_name or any(
+                                        event in space.name for space in explink.spaces) for event in automated_events):
+                                    for event in automated_events:
+                                        if event in initial_space_name or any(
+                                                event in space.name for space in explink.spaces):
+                                            print(f"Event: {event}")
+                                            link = f"  Regular Link: {initial_space_name}"
+                                            for space in explink.spaces:
+                                                link += f" -> {space.name}"
+                                                # if space.name in nodes:
+                                                #     nodes.remove(space.name)
+                                            print(link)
+
+                                if initial_space_name not in automated_dict:
+                                    automated_dict[initial_space_name] = {}
+
+                                for space in explink.spaces:
+                                    if space is not None:
+                                        automated_dict[initial_space_name]["True"] = space.name
+                                        if space.name in nodes:
+                                            nodes.remove(space.name)
 
 
                         elif explink.__class__.__name__ == 'ConditionalExpLink':
-                            if explink.fromspace.name in automated_events or explink.tospace.name in automated_events:
-                                line = f"  Conditional Link: {explink.fromspace.name}"
-                                line += f" ?-> {explink.tospace.name}"
-                                line += f"  Condition: {explink.condition}"
-                                print(line)
+                            if explink.fromspace and explink.tospace:
+                                if any(event in explink.fromspace.name or event in explink.tospace.name for event in
+                                       automated_events):
+                                    line = f"  Conditional Link: {explink.fromspace.name}"
+                                    line += f" ?-> {explink.tospace.name}"
+                                    line += f"  Condition: {explink.condition}"
+                                    print(line)
 
-                                automated_queue.append(explink.fromspace.name)
-                                automated_queue.append(explink.tospace.name)
+                                    if explink.tospace.name in nodes:
+                                        nodes.remove(explink.tospace.name)
+
+                                if explink.fromspace.name not in automated_dict:
+                                    automated_dict[explink.fromspace.name] = {}
+
+                                automated_dict[explink.fromspace.name][explink.condition] = explink.tospace.name
 
 
 
+                        # if explink.initial_space.name in automated_events or any(space.name in automated_events for space in explink.spaces):
+                            #     for event in automated_events:
+                            #         if event in explink.initial_space.name or any(event in space.name for space in explink.spaces):
+                            #             print()
+                            #             print(f"Event: {event}")
+                            #             link = f"  Regular Link: {explink.initial_space.name}"
+                            #             for space in explink.spaces:
+                            #                 link += f" -> {space.name}"
+                            #             print(link)
+                            #
+                            #             automated_queue.append(explink.initial_space.name)
+                            #             for space in explink.spaces:
+                            #                 automated_queue.append(space.name)
 
 
                 print('------------------------------------------')
@@ -291,79 +454,99 @@ for component in no_events_workflow_model.component:
                 for control in component.control:
                     for explink in control.explink:
                         if explink.__class__.__name__ == 'RegularExpLink':
-                            if explink.initial_space.name in manual_events or any(space.name in manual_events for space in explink.spaces):
-                                for event in manual_events:
-                                    if event in explink.initial_space.name or any(
-                                            event in space.name for space in explink.spaces):
-                                        print()
-                                        print(f"Event: {event}")
-                                        link = f"  Regular Link: {explink.initial_space.name}"
-                                        for space in explink.spaces:
-                                            link += f" -> {space.name}"
-                                        print(link)
+                            if explink.initial_space and explink.spaces:
+                                initial_space_name = explink.initial_space.name
+                                if initial_space_name == "START":
+                                    initial_space_name = explink.start.name
 
-                                        manual_queue.append(explink.initial_space.name)
-                                        for space in explink.spaces:
-                                            manual_queue.append(space.name)
+                                if any(event in initial_space_name or any(
+                                        event in space.name for space in explink.spaces) for event in manual_events):
+                                    for event in manual_events:
+                                        if event in initial_space_name or any(
+                                                event in space.name for space in explink.spaces):
+                                            print(f"Event: {event}")
+                                            link = f"  Regular Link: {initial_space_name}"
+                                            for space in explink.spaces:
+                                                link += f" -> {space.name}"
+                                            print(link)
+
+                                if initial_space_name not in manual_dict:
+                                    manual_dict[initial_space_name] = {}
+
+                                for space in explink.spaces:
+                                    if space is not None:
+                                        manual_dict[initial_space_name]["True"] = space.name
 
                         elif explink.__class__.__name__ == 'ConditionalExpLink':
-                            if explink.fromspace.name in manual_events or explink.tospace.name in manual_events:
-                                line = f"  Conditional Link: {explink.fromspace.name}"
-                                line += f" ?-> {explink.tospace.name}"
-                                line += f"  Condition: {explink.condition}"
-                                print(line)
+                            if explink.fromspace and explink.tospace:
+                                if any(event in explink.fromspace.name or event in explink.tospace.name for event in
+                                       manual_events):
+                                    line = f"  Conditional Link: {explink.fromspace.name}"
+                                    line += f" ?-> {explink.tospace.name}"
+                                    line += f"  Condition: {explink.condition}"
+                                    print(line)
 
-                                manual_queue.append(explink.fromspace.name)
-                                manual_queue.append(explink.tospace.name)
+                                if explink.fromspace.name not in manual_dict:
+                                    manual_dict[explink.fromspace.name] = {}
 
+                                manual_dict[explink.fromspace.name][explink.condition] = explink.tospace.name
                 print('------------------------------------------')
 
-print(automated_queue)
-print(manual_queue)
+# print("Nodes: ",nodes)
+# print("Automated Events:", automated_events)
+# print("Manual Events",manual_events)
+# print("Spaces: ", spaces)
 
 
-for space_config in space_configs:
-    pp.pprint(space_config)
-    print()
+# print("Spaces Config: ")
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(space_configs)
+#
+# print("Automated Dictionary:")
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(automated_dict)
+#
+# print("Manual Dictionary:")
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(manual_dict)
 
 
 
-grid_search_combinations = []
-for space_config in space_configs:
-    print('-------------------------------------------------------------------')
-    print(f"Running experiment of espace '{space_config['Space']}' of type '{space_config['Strategy']}'")
-    method_type = space_config["Strategy"]
-    if method_type == "gridsearch":
-        VPs = space_config["VPs"]
-        vp_combinations = []
-
-        for vp_data in VPs:
-            if vp_data["Type"] == "enum":
-                vp_name = vp_data["VP"]
-                vp_values = vp_data["Values"]
-                vp_combinations.append([(vp_name, value) for value in vp_values])
-
-            elif vp_data["Type"] == "range":
-                vp_name = vp_data["VP"]
-                min_value = vp_data["Minimum"]
-                max_value = vp_data["Maximum"]
-                step_value = vp_data.get("Step", 1) if vp_data["Step"] != 0 else 1
-                vp_values = list(range(min_value, max_value + 1, step_value))
-                vp_combinations.append([(vp_name, value) for value in vp_values])
-
-            # Generate combinations
-        combinations = list(itertools.product(*vp_combinations))
-        grid_search_combinations.extend(combinations)
-
-        print(f"\nGrid search generated {len(combinations)} configurations to run.")
-        for combination in combinations:
-
-            print(combination)
 
 
-    if method_type == "randomsearch":
-        VPs = space_config["VPs"]
 
-    print()
+
+
+# print("Parsed Automated Events")
+# for e in parsed_automated_events:
+#     print(e.name)
+#     print()
+#
+# print("Parsed Manual Events")
+# for e in parsed_manual_events:
+#     print(e.name)
+#     print()
+
+
+#
+# for space_config in space_configs:
+#     pp.pprint(space_config)
+#     print()
+
+print("\n*********************************************************")
+print("***************** RUNNING WORKFLOWS ***********************")
+print("*********************************************************")
+start_node = list(nodes)[0]
+print("Start Node: ", start_node)
+node = start_node
+
+result = execute_node(node)
+while node in automated_dict:
+    next_action = automated_dict[node]
+    node = next_action[result]
+    result = execute_node(node)
+
+
+
 
 
