@@ -97,7 +97,7 @@ def get_underlying_tasks(t, assembled_wf, tasks_to_add):
         else:
             get_underlying_tasks(task, assembled_wf, tasks_to_add)
         i += 1
-    return tasks_to_add
+    return tasks_to_addsc
 
 
 def flatten_workflows(assembled_wf):
@@ -152,11 +152,14 @@ def generate_final_assembled_workflows(wfs, assembled_wfs_data):
     return new_wfs
 
 
-def configure_final_workflow(vp_method, c):
-    w = next(w for w in assembled_flat_wfs if w.name == vp_method["assembled_workflow"])
+def configure_final_workflow(assembled_flat_wfs,space_configs, c):
+    for w in assembled_flat_wfs:
+        print(w.name)
+    print(space_configs)
+    w = next(w for w in assembled_flat_wfs if w.name == space_configs["assembled_workflow"])
     for t in w.tasks:
-        if t.name in vp_method["tasks"].keys():
-            task_config = vp_method["tasks"][t.name]
+        if t.name in space_configs["tasks"].keys():
+            task_config = space_configs["tasks"][t.name]
             for p in task_config.keys():
                 alias = task_config[p]
                 print(f"Setting param '{p}' of task '{t.name}' to '{c[alias]}'")
@@ -210,3 +213,29 @@ def run_experiment(vp_method):
         run_random_search_exp(vp_method)
 
 
+def execute_wf(w):
+    print("****************************")
+    print(f"Executing workflow {w.name}")
+    print("****************************")
+    w.print()
+    print("****************************")
+
+    gateway = create_gateway_and_connect_to_it(credentials.proactive_username, credentials.proactive_password)
+    job = create_job(gateway, w.name)
+    fork_env = create_fork_env(gateway, job)
+
+    previous_tasks = []
+    for t in w.tasks:
+        task_to_execute = create_python_task(gateway, t.name, fork_env, t.impl_file, t.input_files, previous_tasks)
+        if len(t.params) > 0:
+            configure_task(task_to_execute, t.params)
+        job.addTask(task_to_execute)
+        previous_tasks = [task_to_execute]
+    print("Tasks added.")
+
+    job_id, job_result, job_outputs = submit_job_and_retrieve_results_and_outputs(gateway, job)
+    teardown(gateway)
+
+    print("****************************")
+    print(f"Finished executing workflow {w.name}")
+    print("****************************")
