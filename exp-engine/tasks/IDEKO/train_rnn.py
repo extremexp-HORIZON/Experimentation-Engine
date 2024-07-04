@@ -68,5 +68,4 @@ history_rnn = model_rnn.model_fitting(model_rnn.model, X_train, y_train, X_test,
 
 # Model evaluation
 Y_pad = np.asarray(Y_pad)
-model_rnn.model_evaluation(model_rnn.model, X_pad, Y_pad, X_test, y_test)
-result = model_rnn.model_evaluation(model_rnn.model, X_pad, Y_pad, X_test, y_test)
+resultMap = model_rnn.model_evaluation(model_rnn.model, X_pad, Y_pad, X_test, y_test, variables, resultMap)

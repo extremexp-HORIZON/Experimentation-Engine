@@ -109,7 +109,7 @@ class ModelConfiguration():
 
         return history
 
-    def model_evaluation(self, model, X, y, X_test, y_test):
+    def model_evaluation(self, model, X, y, X_test, y_test, myvariables, myresultMap):
         ''' Function to evaluate the model on the entire dataset and on the test set.
 
         Parameters (input):
@@ -128,18 +128,10 @@ class ModelConfiguration():
 
         model_metrics_test = model.evaluate(X_test, y_test, return_dict = True)
         for metric, value in model_metrics_test.items():
+            myresultMap.put(metric, value)
             logger.info("model_evaluation(): %s of the test data: %s" %(metric, value))
 
-        # import json
-        # id = int(myvariables.get('PA_TASK_ID'))
-        # name = str(myvariables.get('PA_TASK_NAME'))
-        # data = {
-        #     'ID': id,
-        #     'Name': name
-        # }
-        # myresult = json.dumps(data)
-
-        return 42
+        return myresultMap
 
     def model_prediction(self, model, X, threshold = 0.5):
         ''' Function to compute predictions (class 0 or class 1).

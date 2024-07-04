@@ -109,12 +109,17 @@ def submit_job_and_retrieve_results_and_outputs(gateway, job):
             seconds += 1
             time.sleep(1)
 
-    print("Getting job results...")
-    job_result = gateway.getJobResult(job_id, 300000)
-    print(job_result)
+    # print("Getting job results...")
+    # job_result = gateway.getJobResult(job_id, 300000)
+    # print("****")
+    # print(type(job_result))
+    # print(job_result)
+    # print("****")
+
     # task_result = gateway.getTaskResult(job_id, "TrainModel", 300000)
     # print(task_result)
 
+    print("Getting job result map...")
     result_map = dict(gateway.waitForJob(job_id, 300000).getResultMap())
     print(result_map)
 
@@ -122,7 +127,7 @@ def submit_job_and_retrieve_results_and_outputs(gateway, job):
     job_outputs = gateway.printJobOutput(job_id, 300000)
     print(job_outputs)
 
-    return job_id, job_result, job_outputs
+    return job_id, result_map, job_outputs
 
 
 def teardown(gateway):

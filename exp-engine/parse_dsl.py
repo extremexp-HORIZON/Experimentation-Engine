@@ -17,6 +17,7 @@ manual_dict = {}
 parsed_manual_events = []
 parsed_automated_events = []
 
+results = {}
 
 class AutomatedEvent():
     def __init__(self, name, task, condition):
@@ -72,6 +73,10 @@ def execute_space(node):
     if method_type == "randomsearch":
         run_random_search()
 
+    print("node executed")
+    print("Results so far")
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(results)
 
     return 'True'
 
@@ -102,11 +107,17 @@ def run_grid_search(space_config):
      for combination in combinations:
          print(combination)
 
+     space_results = {}
+     results[space_config['name']] = space_results
      run_count = 1
      for c in combinations:
          print(f"Run {run_count}")
          workflow_to_run = get_workflow_to_run(space_config, c)
-         execute_wf(workflow_to_run)
+         result = execute_wf(workflow_to_run)
+         workflow_results = {}
+         workflow_results["configuration"] = c
+         workflow_results["result"] = result
+         space_results[run_count] = workflow_results
          print("..........")
          run_count += 1
 
@@ -139,7 +150,6 @@ def execute_node(node):
 
     elif node in manual_events:
         return execute_manual_event(node)
-
 
 
 

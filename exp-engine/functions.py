@@ -233,9 +233,12 @@ def execute_wf(w):
         previous_tasks = [task_to_execute]
     print("Tasks added.")
 
-    job_id, job_result, job_outputs = submit_job_and_retrieve_results_and_outputs(gateway, job)
+    job_id, job_result_map, job_outputs = submit_job_and_retrieve_results_and_outputs(gateway, job)
     teardown(gateway)
 
     print("****************************")
     print(f"Finished executing workflow {w.name}")
     print("****************************")
+
+    return job_result_map
+

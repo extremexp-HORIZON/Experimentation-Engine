@@ -35,7 +35,8 @@ workflow IDEKO {
   define data InputData;
 
   configure data InputData {
-    path "datasets/ideko-subset/**";
+    // path "datasets/ideko-subset/**";
+    path "datasets/ideko-full-dataset/**";
   }
 
   InputData --> ReadData;
@@ -72,10 +73,8 @@ experiment EXP {
 
     space S1 of AW1 {
         strategy gridsearch;
-        // param epochs_vp = range(80,90,10);
-        // param batch_size_vp = enum(64, 128);
-        param epochs_vp = range(80,90,20);
-        param batch_size_vp = enum(64);
+        param epochs_vp = range(80,90,10);
+        param batch_size_vp = enum(64, 128);
 
         configure task TrainModel {
              param epochs = epochs_vp;
