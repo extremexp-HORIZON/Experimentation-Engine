@@ -49,11 +49,11 @@ def execute_manual_event(node):
     print("executing manual event")
     e = next((e for e in parsed_manual_events if e.name == node), None)
 
-    print(e.task)
+    # print(e.task)
 
     module = __import__('IDEKO_events')
     func = getattr(module, e.task)
-    ret = func()
+    ret = func(automated_dict,space_configs,e.name)
     print("--------------------------------------------------------------------")
     return ret
 
@@ -363,7 +363,7 @@ for component in no_events_workflow_model.component:
             elif node.__class__.__name__ == 'SpaceConfig':
                 print(f"  Space: {node.name}")
                 print(f"    Assembled Workflow: {node.assembled_workflow.name}")
-                print(f"    Strategy: {node.strategy_name}")
+                print(f"    Vairbality : {node.strategy_name}")
 
                 spaces.add(node.name)
 
@@ -548,9 +548,9 @@ for component in no_events_workflow_model.component:
 # print("Spaces: ", spaces)
 
 
-print("Spaces Config: ")
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(space_configs)
+# print("Spaces Config: ")
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(space_configs)
 # #
 # print("Automated Dictionary:")
 # pp = pprint.PrettyPrinter(indent=4)

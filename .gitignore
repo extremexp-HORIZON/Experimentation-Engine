@@ -3,3 +3,5 @@ credentials.py
 env
 __pycache__
 datasets/ideko-full-dataset
+exp-engine/datasets/ideko-full-dataset
+

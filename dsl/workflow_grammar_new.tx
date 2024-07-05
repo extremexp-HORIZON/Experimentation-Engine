@@ -104,6 +104,7 @@ SpaceConfig:
     'space' name=ID 'of' assembled_workflow=[AssembledWorkflow] '{'
         'strategy' strategy_name=Strategy ';'
         (vps=VP)*
+        ('runs' '=' runs=INT ';')?
         (tasks=ESpaceTaskConfiguration)*
     '}';
 

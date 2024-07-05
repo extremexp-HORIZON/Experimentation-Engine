@@ -129,12 +129,11 @@ experiment EXP {
         }
     }
 
-
     space S4 of AW1 {
         strategy randomsearch;
-        param epochs_vp = range(100,105);
-        param batch_size_vp = enum(64, 128);
-        // add runs
+        param epochs_vp = range(100,105,2);
+        param batch_size_vp = range(60, 70);
+        runs = 5;
 
         configure task TrainModel {
              param epochs = epochs_vp;
@@ -151,9 +150,6 @@ experiment EXP {
              param epochs = epochs_vp;
              param batch_size = batch_size_vp;
         }
-
-
-
     }
 }
 
