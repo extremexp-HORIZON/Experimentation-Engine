@@ -34,8 +34,8 @@ activation_function = config_rnn["model_parameters"]["activation_function"]
 hidden_units = config_rnn["model_parameters"]["hidden_units"]
 
 # Number of epochs and batch_size
-epochs = 2
-batch_size = 64
+epochs = int(variables.get("epochs"))
+batch_size = int(variables.get("batch_size"))
 
 n_timestamps, n_features = ph.load_datasets(variables, "n_timestamps", "n_features")
 X_train, y_train = ph.load_datasets(variables, "X_train", "y_train")

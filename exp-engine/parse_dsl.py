@@ -5,6 +5,7 @@ from functions import *
 import itertools
 from collections import deque
 import pprint
+import random
 
 printexperiments = []
 nodes = set()
@@ -40,7 +41,7 @@ def execute_automated_event(node):
 
     module = __import__('IDEKO_events')
     func = getattr(module, e.task)
-    ret = func([90,70,50])
+    ret = func(results)
     print("--------------------------------------------------------------------")
     return ret
 
@@ -48,11 +49,11 @@ def execute_manual_event(node):
     print("executing manual event")
     e = next((e for e in parsed_manual_events if e.name == node), None)
 
-    print(e.task)
+    # print(e.task)
 
     module = __import__('IDEKO_events')
     func = getattr(module, e.task)
-    ret = func()
+    ret = func(automated_dict,space_configs,e.name)
     print("--------------------------------------------------------------------")
     return ret
 
@@ -71,7 +72,7 @@ def execute_space(node):
         run_grid_search(space_config)
 
     if method_type == "randomsearch":
-        run_random_search()
+        run_random_search(space_config)
 
     print("node executed")
     print("Results so far")
@@ -128,15 +129,52 @@ def get_workflow_to_run(space_config, c):
     for t in w.tasks:
         if t.name in space_config["tasks"].keys():
             task_config = space_config["tasks"][t.name]
-            print(task_config)
             for param_name, param_vp in task_config.items():
                 alias = param_vp
                 print(f"Setting param '{param_name}' of task '{t.name}' to '{c_dict[alias]}'")
                 t.set_param(param_name, c_dict[alias])
     return w
 
-def  run_random_search():
-    print("running random serach")
+def  run_random_search(space_config):
+    random_combinations = []
+
+    vps = space_config['VPs']
+    runs = space_config['runs']
+
+    for i in range(runs):
+        combination = []
+        for vp in vps:
+            vp_name = vp['name']
+            min_val = vp['min']
+            max_val = vp['max']
+
+            value = random.randint(min_val, max_val)
+
+            combination.append((vp_name, value))
+
+        random_combinations.append(tuple(combination))
+
+    print(f"\nRandom search generated {len(random_combinations)} configurations to run.\n")
+    for c in random_combinations:
+        print(c)
+
+
+    run_count = 1
+    space_results = {}
+    results[space_config['name']] = space_results
+    for c in random_combinations:
+        print(f"Run {run_count}")
+        workflow_to_run = get_workflow_to_run(space_config, c)
+        result = execute_wf(workflow_to_run)
+        workflow_results = {}
+        workflow_results["configuration"] = c
+        workflow_results["result"] = result
+        space_results[run_count] = workflow_results
+        print("..........")
+        run_count += 1
+
+
+
 
 
 def execute_node(node):
@@ -325,7 +363,7 @@ for component in no_events_workflow_model.component:
             elif node.__class__.__name__ == 'SpaceConfig':
                 print(f"  Space: {node.name}")
                 print(f"    Assembled Workflow: {node.assembled_workflow.name}")
-                print(f"    Strategy: {node.strategy_name}")
+                print(f"    Vairbality : {node.strategy_name}")
 
                 spaces.add(node.name)
 
@@ -334,7 +372,8 @@ for component in no_events_workflow_model.component:
                     "assembled_workflow": node.assembled_workflow.name,
                     "strategy": node.strategy_name,
                     "tasks": {},
-                    "VPs": []
+                    "VPs": [],
+                    "runs":node.runs
                 }
 
                 if node.tasks:
@@ -382,7 +421,8 @@ for component in no_events_workflow_model.component:
                             space_config_data["VPs"].append(vp_data)
 
 
-
+                if(node.runs!=0):
+                    print(f"        Runs: ", {node.runs})
 
                 space_configs.append(space_config_data)
 
@@ -511,7 +551,7 @@ for component in no_events_workflow_model.component:
 # print("Spaces Config: ")
 # pp = pprint.PrettyPrinter(indent=4)
 # pp.pprint(space_configs)
-#
+# #
 # print("Automated Dictionary:")
 # pp = pprint.PrettyPrinter(indent=4)
 # pp.pprint(automated_dict)
@@ -519,13 +559,6 @@ for component in no_events_workflow_model.component:
 # print("Manual Dictionary:")
 # pp = pprint.PrettyPrinter(indent=4)
 # pp.pprint(manual_dict)
-
-
-
-
-
-
-
 
 # print("Parsed Automated Events")
 # for e in parsed_automated_events:

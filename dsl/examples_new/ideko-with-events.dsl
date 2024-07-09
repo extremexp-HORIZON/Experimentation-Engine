@@ -35,7 +35,7 @@ workflow IDEKO {
   define data InputData;
 
   configure data InputData {
-    path "datasets/ideko-subset/**";
+    path "datasets/ideko-full-dataset/**";
   }
 
   InputData --> ReadData;
@@ -65,21 +65,22 @@ experiment EXP {
         //Automated
         //START -> S1;
         S1 -> E1;
-        //E1 ?-> S2 { condition "True"};
-        //E1 ?-> S3 { condition "False"};
 
-        //S2 -> S4;
-        //S3 -> S4;
+        E1 ?-> S2 { condition "True"};
+        E1 ?-> S3 { condition "False"};
+
+        S2 -> S4;
+        S3 -> S4;
 
         //Manual
         // Note E2 is allowed to change any scheduled workflows after it
-        //S4 -> E2;
-        //E2 -> S5;
+        S4 -> E2;
+        E2 -> S5;
 
-        // S4 -> S5 || E2; // This an alternative to line 84. E2 is allowed to change S4 or S5 spaces at any point of time
+        S4 -> S5 || E2; // This an alternative to line 84. E2 is allowed to change S4 or S5 spaces at any point of time
 
 
-        //S4 -> E3; // checking for multiple events
+        S4 -> E3; // checking for multiple events
 
     }
 
@@ -97,10 +98,8 @@ experiment EXP {
 
     space S1 of AW1 {
         strategy gridsearch;
-        // param epochs_vp = range(80,90,10);
-        // param batch_size_vp = enum(64, 128);
-        param epochs_vp = range(80,90,20);
-        param batch_size_vp = enum(64);
+        param epochs_vp = range(80,90,10);
+        param batch_size_vp = enum(64, 128);
 
         configure task TrainModel {
              param epochs = epochs_vp;
@@ -130,12 +129,11 @@ experiment EXP {
         }
     }
 
-
     space S4 of AW1 {
         strategy randomsearch;
-        param epochs_vp = range(100,105);
-        param batch_size_vp = enum(64, 128);
-        // add runs
+        param epochs_vp = range(100,105,2);
+        param batch_size_vp = range(60, 70);
+        runs = 5;
 
         configure task TrainModel {
              param epochs = epochs_vp;
@@ -152,9 +150,6 @@ experiment EXP {
              param epochs = epochs_vp;
              param batch_size = batch_size_vp;
         }
-
-
-
     }
 }
 
