@@ -55,8 +55,6 @@ workflow AW2 from IDEKO {
   }
 }
 
-
-
 experiment EXP {
 
     intent FindBestClassifier;
@@ -72,8 +70,7 @@ experiment EXP {
 
         //Manual
         // Note E2 is allowed to change any scheduled workflows after it
-        S4 -> E2;
-        E2 -> S5;
+        S4 -> E2 -> S5;
     }
 
 
