@@ -1,7 +1,7 @@
 
 import os
 import numpy as np
-sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/src"))
+sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
 from classes.binary_models import RecurrentNeuralNetwork
 from helpers.logger import LoggerHelper, logging
 from helpers.config import ConfigHelper

@@ -2,7 +2,7 @@
 import numpy as np
 import os
 import json
-sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/src"))
+sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
 from classes import preprocessing_functions
 import proactive_helper as ph
 from helpers.logger import LoggerHelper, logging
