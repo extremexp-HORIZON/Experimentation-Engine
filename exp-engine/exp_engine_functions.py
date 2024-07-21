@@ -1,8 +1,6 @@
 from exp_engine_classes import *
-import os
-import sys
-import credentials
-from proactive_interface import *
+import proactive_executionware.credentials as credentials
+from proactive_executionware.proactive_interface import *
 
 
 def process_dependencies(task_dependencies, nodes, parsing_node_type, verbose_logging=False):
