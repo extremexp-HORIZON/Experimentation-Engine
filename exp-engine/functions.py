@@ -9,7 +9,6 @@ import os
 import sys
 parent_dir = os.path.dirname(os.getcwd())
 sys.path.append(parent_dir)
-from dsl import dsl_exceptions
 import credentials
 from proactive_interface import *
 
