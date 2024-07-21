@@ -2,7 +2,7 @@ from . import credentials
 import proactive
 
 
-def create_gateway_and_connect_to_it(username, password):
+def _create_gateway_and_connect_to_it(username, password):
     print("Logging on proactive-server...")
     proactive_host = 'try.activeeon.com'
     proactive_port = '8443'
@@ -18,7 +18,7 @@ def create_gateway_and_connect_to_it(username, password):
     return gateway
 
 
-def create_job(gateway, workflow_name):
+def _create_job(gateway, workflow_name):
     print("Creating a proactive job...")
     proactive_job = gateway.createJob()
     proactive_job.setJobName(workflow_name)
@@ -26,10 +26,10 @@ def create_job(gateway, workflow_name):
     return proactive_job
 
 
-def create_fork_env(gateway, proactive_job):
+def _create_fork_env(gateway, proactive_job):
     print("Adding a fork environment to the import task...")
     proactive_fork_env = gateway.createForkEnvironment(language="groovy")
-    proactive_fork_env.setImplementationFromFile("./scripts/fork_env.groovy")
+    proactive_fork_env.setImplementationFromFile("./proactive_executionware/scripts/fork_env.groovy")
     proactive_job.addVariable("CONTAINER_PLATFORM", "docker")
     proactive_job.addVariable("CONTAINER_IMAGE", "docker://activeeon/dlm3")
     proactive_job.addVariable("CONTAINER_GPU_ENABLED", "false")
@@ -39,7 +39,7 @@ def create_fork_env(gateway, proactive_job):
     return proactive_fork_env
 
 
-def create_python_task(gateway, task_name, fork_environment, task_impl, input_files=[], dependencies=[], is_precious_result=False):
+def _create_python_task(gateway, task_name, fork_environment, task_impl, input_files=[], dependencies=[], is_precious_result=False):
     print(f"Creating task {task_name}...")
     task = gateway.createPythonTask()
     task.setTaskName(task_name)
@@ -59,7 +59,7 @@ def create_python_task(gateway, task_name, fork_environment, task_impl, input_fi
     return task
 
 
-def configure_task(task, configurations):
+def _configure_task(task, configurations):
     print(f"Configuring task {task.getTaskName()}")
     for k in configurations.keys():
         value = configurations[k]
@@ -68,7 +68,7 @@ def configure_task(task, configurations):
         task.addVariable(k, value)
 
 
-def create_flow_script(gateway, condition_task_name, if_task_name, else_task_name, continuation_task_name, condition):
+def _create_flow_script(gateway, condition_task_name, if_task_name, else_task_name, continuation_task_name, condition):
     branch_script = """
 if """ + condition + """:
     branch = "if"
@@ -86,7 +86,7 @@ else:
     return flow_script
 
 
-def submit_job_and_retrieve_results_and_outputs(gateway, job):
+def _submit_job_and_retrieve_results_and_outputs(gateway, job):
     print("Submitting the job to the scheduler...")
 
     job_id = gateway.submitJobWithInputsAndOutputsPaths(job, debug=False)
@@ -131,7 +131,7 @@ def submit_job_and_retrieve_results_and_outputs(gateway, job):
     return job_id, result_map, job_outputs
 
 
-def teardown(gateway):
+def _teardown(gateway):
     print("Disconnecting")
     gateway.disconnect()
     print("Disconnected")
@@ -146,26 +146,26 @@ def execute_wf(w):
     w.print()
     print("****************************")
 
-    gateway = create_gateway_and_connect_to_it(credentials.proactive_username, credentials.proactive_password)
-    job = create_job(gateway, w.name)
-    fork_env = create_fork_env(gateway, job)
+    gateway = _create_gateway_and_connect_to_it(credentials.proactive_username, credentials.proactive_password)
+    job = _create_job(gateway, w.name)
+    fork_env = _create_fork_env(gateway, job)
 
     created_tasks = []
     for t in w.tasks:
         dependent_tasks = [ct for ct in created_tasks if ct.getTaskName() in t.dependencies]
-        task_to_execute = create_python_task(gateway, t.name, fork_env, t.impl_file, t.input_files, dependent_tasks)
+        task_to_execute = _create_python_task(gateway, t.name, fork_env, t.impl_file, t.input_files, dependent_tasks)
         if len(t.params) > 0:
-            configure_task(task_to_execute, t.params)
+            _configure_task(task_to_execute, t.params)
         if t.is_condition_task():
             task_to_execute.setFlowScript(
-                create_flow_script(gateway, t.name, t.if_task_name, t.else_task_name, t.continuation_task_name, t.condition)
+                _create_flow_script(gateway, t.name, t.if_task_name, t.else_task_name, t.continuation_task_name, t.condition)
             )
         job.addTask(task_to_execute)
         created_tasks.append(task_to_execute)
     print("Tasks added.")
 
-    job_id, job_result_map, job_outputs = submit_job_and_retrieve_results_and_outputs(gateway, job)
-    teardown(gateway)
+    job_id, job_result_map, job_outputs = _submit_job_and_retrieve_results_and_outputs(gateway, job)
+    _teardown(gateway)
 
     print("****************************")
     print(f"Finished executing workflow {w.name}")

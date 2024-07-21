@@ -1,5 +1,5 @@
 import exp_engine_classes as classes
-import proactive_executionware.proactive_interface as proactive_interface
+import proactive_executionware.proactive_runner as proactive_runner
 
 
 def process_dependencies(task_dependencies, nodes, parsing_node_type, verbose_logging=False):
@@ -142,4 +142,4 @@ def generate_final_assembled_workflows(parsed_workflows, assembled_wfs_data):
 
 def execute_wf(w, executionware):
     if executionware == "PROACTIVE":
-        return proactive_interface.execute_wf(w)
+        return proactive_runner.execute_wf(w)
