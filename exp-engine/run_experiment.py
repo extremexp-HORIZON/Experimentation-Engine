@@ -1,4 +1,7 @@
-from functions import *
+import textx
+from exp_engine_functions import *
+from exp_engine_classes import *
+import dsl_exceptions
 import itertools
 import pprint
 import random
@@ -17,19 +20,6 @@ parsed_manual_events = []
 parsed_automated_events = []
 
 results = {}
-
-class AutomatedEvent():
-    def __init__(self, name, task, condition):
-        self.name = name
-        self.task = task
-        self.condition = condition
-
-class ManualEvent():
-    def __init__(self, name, task, restart=False):
-        self.name = name
-        self.task = task
-        self.restart = restart
-
 
 def execute_automated_event(node):
     print("executing automated event")
