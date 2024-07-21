@@ -1,8 +1,9 @@
 import textx
 from exp_engine_functions import *
 from exp_engine_classes import *
-import dsl_exceptions
+import exp_engine_exceptions
 import itertools
+import os
 import pprint
 import random
 
@@ -214,7 +215,7 @@ for component in no_events_workflow_model.component:
                     task.add_sub_workflow_name(e.workflow.name)
                 elif e.filename:
                     if not os.path.exists(e.filename):
-                        raise dsl_exceptions.ImplementationFileNotFound(f"{e.filename} in task {e.alias.name}")
+                        raise exp_engine_exceptions.ImplementationFileNotFound(f"{e.filename} in task {e.alias.name}")
                     task.add_implementation_file(e.filename)
                 if e.dependency:
                     task.input_files.append(e.dependency)
@@ -280,7 +281,7 @@ for component in no_events_workflow_model.component:
                     assembled_workflow_tasks[config.alias.name] = assembled_workflow_task
                 elif config.filename:
                     if not os.path.exists(config.filename):
-                        raise dsl_exceptions.ImplementationFileNotFound(f"{config.filename} in task {config.alias.name}")
+                        raise exp_engine_exceptions.ImplementationFileNotFound(f"{config.filename} in task {config.alias.name}")
                     assembled_workflow_task["implementation"] = config.filename
                     assembled_workflow_tasks[config.alias.name] = assembled_workflow_task
                 configurations.remove(config)
