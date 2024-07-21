@@ -1,6 +1,6 @@
 import textx
-from exp_engine_functions import *
-from exp_engine_classes import *
+import exp_engine_functions as functions
+import exp_engine_classes as classes
 import exp_engine_exceptions
 import itertools
 import os
@@ -8,6 +8,7 @@ import pprint
 import random
 
 EXPERIMENTS_FOLDER = '../dsl/mid-term/'
+EXECUTIONWARE = "PROACTIVE"
 
 printexperiments = []
 nodes = set()
@@ -103,7 +104,7 @@ def run_grid_search(space_config):
      for c in combinations:
          print(f"Run {run_count}")
          workflow_to_run = get_workflow_to_run(space_config, c)
-         result = execute_wf(workflow_to_run)
+         result = functions.execute_wf(workflow_to_run, EXECUTIONWARE)
          workflow_results = {}
          workflow_results["configuration"] = c
          workflow_results["result"] = result
@@ -154,7 +155,7 @@ def  run_random_search(space_config):
     for c in random_combinations:
         print(f"Run {run_count}")
         workflow_to_run = get_workflow_to_run(space_config, c)
-        result = execute_wf(workflow_to_run)
+        result = functions.execute_wf(workflow_to_run, EXECUTIONWARE)
         workflow_results = {}
         workflow_results["configuration"] = c
         workflow_results["result"] = result
@@ -182,10 +183,10 @@ def execute_node(node):
 dsl_file = input("Please provide the name of the DSL file (without the extension):")
 
 with open(EXPERIMENTS_FOLDER + dsl_file + '.dsl', 'r') as file:
-    no_events_workflow_code = file.read()
+    experiment_specification = file.read()
 
-workflow_metamodel = textx.metamodel_from_file('../dsl/workflow_grammar_new.tx')
-no_events_workflow_model = workflow_metamodel.model_from_str(no_events_workflow_code)
+experiments_metamodel = textx.metamodel_from_file('../dsl/workflow_grammar_new.tx')
+experiment_model = experiments_metamodel.model_from_str(experiment_specification)
 
 
 print("*********************************************************")
@@ -193,20 +194,20 @@ print("***************** PARSE WORKFLOWS ***********************")
 print("*********************************************************")
 
 parsed_workflows = []
-for component in no_events_workflow_model.component:
+for component in experiment_model.component:
     if component.__class__.__name__ == 'Workflow':
-        wf = Workflow(component.name)
+        wf = classes.Workflow(component.name)
         parsed_workflows.append(wf)
 
         task_dependencies = {}
 
         for e in component.elements:
             if e.__class__.__name__ == "DefineTask":
-                task = WorkflowTask(e.name)
+                task = classes.WorkflowTask(e.name)
                 wf.add_task(task)
 
             if e.__class__.__name__ == "DefineData":
-                ds = WorkflowDataset(e.name)
+                ds = classes.WorkflowDataset(e.name)
                 wf.add_dataset(ds)
 
             if e.__class__.__name__ == "ConfigureTask":
@@ -225,19 +226,19 @@ for component in no_events_workflow_model.component:
                 ds.add_path(e.path)
 
             if e.__class__.__name__ == "StartAndEndEvent":
-                process_dependencies(task_dependencies, e.nodes, "StartAndEndEvent")
+                functions.process_dependencies(task_dependencies, e.nodes, "StartAndEndEvent")
 
             if e.__class__.__name__ == "StartEvent":
-                process_dependencies(task_dependencies, e.nodes, "StartEvent")
+                functions.process_dependencies(task_dependencies, e.nodes, "StartEvent")
 
             if e.__class__.__name__ == "EndEvent":
-                process_dependencies(task_dependencies, e.nodes, "EndEvent")
+                functions.process_dependencies(task_dependencies, e.nodes, "EndEvent")
 
             if e.__class__.__name__ == "TaskLink":
-                process_dependencies(task_dependencies, [e.initial_node] + e.nodes, "TaskLink")
+                functions.process_dependencies(task_dependencies, [e.initial_node] + e.nodes, "TaskLink")
 
             if e.__class__.__name__ == "DataLink":
-                add_input_output_data(wf, [e.initial] + e.rest)
+                functions.add_input_output_data(wf, [e.initial] + e.rest)
 
             if e.__class__.__name__ == "ConditionLink":
                 condition = e.condition
@@ -249,9 +250,9 @@ for component in no_events_workflow_model.component:
                 conditional_task = wf.get_task(e.from_node.name)
                 conditional_task.set_conditional_tasks(ifNode.name, elseNode.name, contNode.name, condition)
 
-apply_task_dependencies_and_set_order(wf, task_dependencies)
+functions.apply_task_dependencies_and_set_order(wf, task_dependencies)
 
-set_is_main_attribute(parsed_workflows)
+functions.set_is_main_attribute(parsed_workflows)
 
 for wf in parsed_workflows:
             wf.print()
@@ -262,7 +263,7 @@ print("********** PARSE ASSEMBLED WORKFLOWS DATA ***************")
 print("*********************************************************")
 
 assembled_workflows_data = []
-for component in no_events_workflow_model.component:
+for component in experiment_model.component:
     if component.__class__.__name__ == 'AssembledWorkflow':
         assembled_workflow_data = {}
         assembled_workflows_data.append(assembled_workflow_data)
@@ -296,7 +297,7 @@ print("*********************************************************")
 print("************ GENERATE ASSEMBLED WORKFLOWS ***************")
 print("*********************************************************")
 
-assembled_wfs = generate_final_assembled_workflows(parsed_workflows, assembled_workflows_data)
+assembled_wfs = functions.generate_final_assembled_workflows(parsed_workflows, assembled_workflows_data)
 
 
 for wf in assembled_wfs:
@@ -311,14 +312,14 @@ print("*********************************************************")
 assembled_flat_wfs = []
 
 for wf in assembled_wfs:
-    flat_wf = flatten_workflows(wf)
+    flat_wf = functions.flatten_workflows(wf)
     assembled_flat_wfs.append(flat_wf)
     flat_wf.print()
 
 print("************")
 
 
-for component in no_events_workflow_model.component:
+for component in experiment_model.component:
     if component.__class__.__name__ == 'Experiment':
         # experiments.append(component.name)
         print("Experiment name: ", component.name)
@@ -330,12 +331,12 @@ for component in no_events_workflow_model.component:
                 print(f"    Type: {node.eventType}")
                 if node.eventType == 'automated':
                     automated_events.add(node.name)
-                    parsed_event = AutomatedEvent(node.name,node.validation_task, node.condition)
+                    parsed_event = classes.AutomatedEvent(node.name,node.validation_task, node.condition)
                     parsed_automated_events.append(parsed_event)
 
                 if node.eventType == 'manual':
                     manual_events.add(node.name)
-                    parsed_event = ManualEvent(node.name, node.validation_task, node.restart)
+                    parsed_event = classes.ManualEvent(node.name, node.validation_task, node.restart)
                     parsed_manual_events.append(parsed_event)
 
                 if node.condition:
