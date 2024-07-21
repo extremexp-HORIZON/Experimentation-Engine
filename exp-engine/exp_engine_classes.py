@@ -59,12 +59,12 @@ class WorkflowTask():
     def set_param(self, key, value):
         self.params[key] = value
 
-    def clone(self):
+    def clone(self, parsed_workflows):
         new_t = WorkflowTask(self.name)
         new_t.add_implementation_file(self.impl_file)
         new_t.add_sub_workflow_name(self.sub_workflow_name)
         if self.sub_workflow_name:
-            new_t.add_sub_workflow(next(w for w in parsed_workflows if w.name == self.sub_workflow_name).clone())
+            new_t.add_sub_workflow(next(w for w in parsed_workflows if w.name == self.sub_workflow_name).clone(parsed_workflows))
         new_t.add_dependencies(self.dependencies)
         new_t.input_files = self.input_files
         new_t.output_files = self.output_files
@@ -121,11 +121,11 @@ class Workflow():
     def set_is_main(self, is_main):
         self.is_main = is_main
 
-    def clone(self):
+    def clone(self, parsed_workflows):
         new_w = Workflow(self.name)
         new_w.is_main = self.is_main
         for t in self.tasks:
-            new_t = t.clone()
+            new_t = t.clone(parsed_workflows)
             new_w.tasks.append(new_t)
         return new_w
 

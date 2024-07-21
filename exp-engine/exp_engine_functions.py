@@ -121,10 +121,10 @@ def configure_wf(workflow, assembled_wf_data):
             configure_wf(task.sub_workflow, assembled_wf_data)
 
 
-def generate_final_assembled_workflows(wfs, assembled_wfs_data):
+def generate_final_assembled_workflows(parsed_workflows, assembled_wfs_data):
     new_wfs = []
     for assembled_wf_data in assembled_wfs_data:
-        wf = next(w for w in wfs if w.name == assembled_wf_data["parent"]).clone()
+        wf = next(w for w in parsed_workflows if w.name == assembled_wf_data["parent"]).clone(parsed_workflows)
         wf.name = assembled_wf_data["name"]
         new_wfs.append(wf)
         print(wf.name)
