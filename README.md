@@ -6,6 +6,7 @@ For trying out the Proactive Pythen SDK within the ExtremeXP project.
 ## Instructions
 (See email from Caroline Pacheco on 31.12.2023)
 ```
+cd exp-engine
 python3 -m venv env
 source ./env/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel python-dotenv
@@ -16,6 +17,8 @@ pip install -r requirements.txt
 ## Configure credentials
 1. Create `credentials.py` file via copying the template, e.g. by:
     ```
+    cd exp-engine
+    cd proactive_executionware 
     cp credentials-TEMPLATE.py credentials.py
     ``` 
 2. Verify that the `credentials.py` is git ignored (check `.gitignore`)
