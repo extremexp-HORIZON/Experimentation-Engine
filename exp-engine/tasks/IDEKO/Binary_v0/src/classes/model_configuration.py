@@ -1,7 +1,6 @@
 '''
 Model configuration functions
 '''
-
 # TODO
 # import keras
 # from keras.callbacks import EarlyStopping

@@ -1,4 +1,3 @@
-
 import os
 import json
 sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))

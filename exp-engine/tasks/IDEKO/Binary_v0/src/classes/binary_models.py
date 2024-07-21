@@ -1,7 +1,6 @@
 '''
 Define classes for Deep Learning models for timeseries classification.
 '''
-
 import numpy as np
 
 # TODO
