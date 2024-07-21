@@ -1,6 +1,8 @@
 from . import credentials
 import proactive
 
+PROACTIVE_HELPER = "proactive_executionware/proactive_helper.py"
+
 
 def _create_gateway_and_connect_to_it(username, password):
     print("Logging on proactive-server...")
@@ -51,6 +53,8 @@ def _create_python_task(gateway, task_name, fork_environment, task_impl, input_f
         task.addOutputFile('datasets/**')
     for input_file in input_files:
         task.addInputFile(input_file)
+    # Adding the helper to all tasks as input:
+    task.addInputFile(PROACTIVE_HELPER)
     for dependency in dependencies:
         print(f"Adding dependency of '{task_name}' to '{dependency.getTaskName()}'")
         task.addDependency(dependency)

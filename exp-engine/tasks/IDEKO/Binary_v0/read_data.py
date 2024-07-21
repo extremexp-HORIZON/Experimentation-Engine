@@ -3,6 +3,7 @@ import pandas as pd
 sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
 from classes import preprocessing_functions
 from helpers.logger import LoggerHelper, logging
+sys.path.append(os.path.join(os.getcwd(), "proactive_executionware"))
 import proactive_helper as ph
 
 LoggerHelper.init_logger()

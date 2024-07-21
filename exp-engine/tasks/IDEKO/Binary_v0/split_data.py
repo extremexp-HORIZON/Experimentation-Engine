@@ -2,6 +2,7 @@ import os
 import json
 sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
 from classes import preprocessing_functions
+sys.path.append(os.path.join(os.getcwd(), "proactive_executionware"))
 import proactive_helper as ph
 
 X_pad, Y_pad_json = ph.load_datasets(variables, "X_pad", "Y_pad_json")

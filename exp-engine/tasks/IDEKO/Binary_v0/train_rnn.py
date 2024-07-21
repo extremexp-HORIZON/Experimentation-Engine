@@ -4,6 +4,7 @@ sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
 from classes.binary_models import RecurrentNeuralNetwork
 from helpers.logger import LoggerHelper, logging
 from helpers.config import ConfigHelper
+sys.path.append(os.path.join(os.getcwd(), "proactive_executionware"))
 import proactive_helper as ph
 
 
