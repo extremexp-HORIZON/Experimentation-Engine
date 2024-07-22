@@ -56,15 +56,15 @@ def _create_python_task(gateway, task_name, fork_environment, task_impl, input_f
         task.addInputFile(input_file.path)
         input_file_path = os.path.dirname(input_file.path) if "**" in input_file.path else input_file.path
         task.addVariable(input_file.name, input_file_path)
-    input_folders = []
+    dependent_modules_folders = []
     for dependent_module in dependent_modules:
         task.addInputFile(dependent_module)
-        input_folders.append(os.path.dirname(dependent_module))
+        dependent_modules_folders.append(os.path.dirname(dependent_module))
     # Adding the helper to all tasks as input:
     task.addInputFile(PROACTIVE_HELPER)
     proactive_helper_folder = os.path.dirname(PROACTIVE_HELPER)
-    input_folders.append(proactive_helper_folder)
-    task.addVariable("input_folders", ','.join(input_folders))
+    dependent_modules_folders.append(proactive_helper_folder)
+    task.addVariable("dependent_modules_folders", ','.join(dependent_modules_folders))
     for dependency in dependencies:
         print(f"Adding dependency of '{task_name}' to '{dependency.getTaskName()}'")
         task.addDependency(dependency)

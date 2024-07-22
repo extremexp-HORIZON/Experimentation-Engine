@@ -1,6 +1,6 @@
 import os, sys
 import pandas as pd
-[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("input_folders").split(",")]
+[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
 from classes import preprocessing_functions
 from helpers.logger import LoggerHelper, logging
 import proactive_helper as ph

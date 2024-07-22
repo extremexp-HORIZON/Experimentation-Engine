@@ -1,6 +1,6 @@
 import os
 import numpy as np
-[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("input_folders").split(",")]
+[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
 from classes.binary_models import NeuralNetwork
 import proactive_helper as ph
 
