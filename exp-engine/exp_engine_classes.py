@@ -7,6 +7,10 @@ class WorkflowDataset():
     def add_path(self, path):
         self.path = path
 
+    def print(self, tab=""):
+        print(f"{tab}\twith dataset name : {self.name}")
+        print(f"{tab}\twith dataset path : {self.path}")
+
 
 class WorkflowTask():
 
@@ -87,8 +91,12 @@ class WorkflowTask():
         print(f"{tab}\twith sub_workflow_name: {self.sub_workflow_name}")
         print(f"{tab}\twith sub_workflow: {self.sub_workflow}")
         print(f"{tab}\twith dependencies: {self.dependencies}")
-        print(f"{tab}\twith inputs: {self.input_files}")
-        print(f"{tab}\twith outputs: {self.output_files}")
+        print(f"{tab}\twith inputs:")
+        for ds in self.input_files:
+            ds.print(tab+"\t")
+        print(f"{tab}\twith outputs:")
+        for ds in self.output_files:
+            ds.print(tab+"\t")
         print(f"{tab}\twith dependent modules: {self.dependent_modules}")
         print(f"{tab}\twith order: {self.order}")
         print(f"{tab}\twith params: {self.params}")

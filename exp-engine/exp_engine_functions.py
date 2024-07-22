@@ -20,10 +20,10 @@ def add_input_output_data(wf, nodes):
     for n1, n2 in zip(nodes[0::1], nodes[1::1]):
         if n1.__class__.__name__ == "DefineTask":
             ds = wf.get_dataset(n2.name)
-            wf.get_task(n1.name).output_files.append(ds.path)
+            wf.get_task(n1.name).output_files.append(ds)
         if n1.__class__.__name__ == "DefineData":
             ds = wf.get_dataset(n1.name)
-            wf.get_task(n2.name).input_files.append(ds.path)
+            wf.get_task(n2.name).input_files.append(ds)
 
 
 def apply_task_dependencies_and_set_order(wf, task_dependencies):

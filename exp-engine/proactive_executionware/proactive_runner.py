@@ -53,7 +53,9 @@ def _create_python_task(gateway, task_name, fork_environment, task_impl, input_f
         print("inside TrainModel, adding output file")
         task.addOutputFile('datasets/**')
     for input_file in input_files:
-        task.addInputFile(input_file)
+        task.addInputFile(input_file.path)
+        input_file_path = os.path.dirname(input_file.path) if "**" in input_file.path else input_file.path
+        task.addVariable(input_file.name, input_file_path)
     input_folders = []
     for dependent_module in dependent_modules:
         task.addInputFile(dependent_module)
