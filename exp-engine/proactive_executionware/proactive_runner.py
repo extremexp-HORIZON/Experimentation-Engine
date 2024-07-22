@@ -42,7 +42,7 @@ def _create_fork_env(gateway, proactive_job):
     return proactive_fork_env
 
 
-def _create_python_task(gateway, task_name, fork_environment, task_impl, input_files=[], dependencies=[], is_precious_result=False):
+def _create_python_task(gateway, task_name, fork_environment, task_impl, input_files=[], dependent_modules=[], dependencies=[], is_precious_result=False):
     print(f"Creating task {task_name}...")
     task = gateway.createPythonTask()
     task.setTaskName(task_name)
@@ -52,10 +52,12 @@ def _create_python_task(gateway, task_name, fork_environment, task_impl, input_f
     if task_name == "TrainModel":
         print("inside TrainModel, adding output file")
         task.addOutputFile('datasets/**')
-    input_folders = []
     for input_file in input_files:
         task.addInputFile(input_file)
-        input_folders.append(os.path.dirname(input_file))
+    input_folders = []
+    for dependent_module in dependent_modules:
+        task.addInputFile(dependent_module)
+        input_folders.append(os.path.dirname(dependent_module))
     # Adding the helper to all tasks as input:
     task.addInputFile(PROACTIVE_HELPER)
     proactive_helper_folder = os.path.dirname(PROACTIVE_HELPER)
@@ -163,7 +165,7 @@ def execute_wf(w):
     created_tasks = []
     for t in w.tasks:
         dependent_tasks = [ct for ct in created_tasks if ct.getTaskName() in t.dependencies]
-        task_to_execute = _create_python_task(gateway, t.name, fork_env, t.impl_file, t.input_files, dependent_tasks)
+        task_to_execute = _create_python_task(gateway, t.name, fork_env, t.impl_file, t.input_files, t.dependent_modules, dependent_tasks)
         if len(t.params) > 0:
             _configure_task(task_to_execute, t.params)
         if t.is_condition_task():

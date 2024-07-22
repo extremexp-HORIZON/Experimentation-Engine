@@ -18,6 +18,7 @@ class WorkflowTask():
         self.impl_file = None
         self.input_files = []
         self.output_files = []
+        self.dependent_modules = []
         self.dependencies = []
         self.conditional_dependencies = []
         self.name = name
@@ -47,6 +48,9 @@ class WorkflowTask():
     def add_sub_workflow(self, workflow):
         self.sub_workflow = workflow
 
+    def add_dependent_module(self, module):
+        self.dependent_modules.append(module)
+
     def add_dependencies(self, dependencies):
         self.dependencies += dependencies
 
@@ -68,6 +72,7 @@ class WorkflowTask():
         new_t.add_dependencies(self.dependencies)
         new_t.input_files = self.input_files
         new_t.output_files = self.output_files
+        new_t.dependent_modules = self.dependent_modules
         new_t.set_order(self.order)
         new_t.params = self.params
         new_t.condition = self.condition
@@ -84,6 +89,7 @@ class WorkflowTask():
         print(f"{tab}\twith dependencies: {self.dependencies}")
         print(f"{tab}\twith inputs: {self.input_files}")
         print(f"{tab}\twith outputs: {self.output_files}")
+        print(f"{tab}\twith dependent modules: {self.dependent_modules}")
         print(f"{tab}\twith order: {self.order}")
         print(f"{tab}\twith params: {self.params}")
         # print(f"{tab}\twith condition: {self.condition}")

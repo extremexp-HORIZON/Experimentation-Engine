@@ -219,7 +219,7 @@ for component in experiment_model.component:
                         raise exp_engine_exceptions.ImplementationFileNotFound(f"{e.filename} in task {e.alias.name}")
                     task.add_implementation_file(e.filename)
                 if e.dependency:
-                    task.input_files.append(e.dependency)
+                    task.add_dependent_module(e.dependency)
 
             if e.__class__.__name__ == "ConfigureData":
                 ds = wf.get_dataset(e.alias.name)
