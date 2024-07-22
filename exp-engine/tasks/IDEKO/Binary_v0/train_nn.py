@@ -1,8 +1,7 @@
 import os
 import numpy as np
-sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
+[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("input_folders").split(",")]
 from classes.binary_models import NeuralNetwork
-sys.path.append(os.path.join(os.getcwd(), "proactive_executionware"))
 import proactive_helper as ph
 
 # NeuralNetwork:

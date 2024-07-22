@@ -1,9 +1,8 @@
 import os, sys
 import pandas as pd
-sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
+[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("input_folders").split(",")]
 from classes import preprocessing_functions
 from helpers.logger import LoggerHelper, logging
-sys.path.append(os.path.join(os.getcwd(), "proactive_executionware"))
 import proactive_helper as ph
 
 LoggerHelper.init_logger()

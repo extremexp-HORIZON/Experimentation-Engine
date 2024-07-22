@@ -1,9 +1,8 @@
 import numpy as np
 import os
 import json
-sys.path.append(os.path.join(os.getcwd(), "tasks/IDEKO/Binary_v0/src"))
+[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("input_folders").split(",")]
 from classes import preprocessing_functions
-sys.path.append(os.path.join(os.getcwd(), "proactive_executionware"))
 import proactive_helper as ph
 from helpers.logger import LoggerHelper, logging
 

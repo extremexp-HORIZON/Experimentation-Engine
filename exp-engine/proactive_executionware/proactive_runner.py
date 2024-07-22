@@ -1,5 +1,6 @@
 from . import credentials
 import proactive
+import os
 
 PROACTIVE_HELPER = "proactive_executionware/proactive_helper.py"
 
@@ -51,10 +52,15 @@ def _create_python_task(gateway, task_name, fork_environment, task_impl, input_f
     if task_name == "TrainModel":
         print("inside TrainModel, adding output file")
         task.addOutputFile('datasets/**')
+    input_folders = []
     for input_file in input_files:
         task.addInputFile(input_file)
+        input_folders.append(os.path.dirname(input_file))
     # Adding the helper to all tasks as input:
     task.addInputFile(PROACTIVE_HELPER)
+    proactive_helper_folder = os.path.dirname(PROACTIVE_HELPER)
+    input_folders.append(proactive_helper_folder)
+    task.addVariable("input_folders", ','.join(input_folders))
     for dependency in dependencies:
         print(f"Adding dependency of '{task_name}' to '{dependency.getTaskName()}'")
         task.addDependency(dependency)
