@@ -29,8 +29,7 @@ workflow IDEKO {
   define data InputData;
 
   configure data InputData {
-    name "test1"
-    path "datasets/ideko-subset/**";
+    path "datasets/v0/ideko-subset/**";
     // path "datasets/ideko-full-dataset/**";
   }
 
