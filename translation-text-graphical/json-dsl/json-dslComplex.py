@@ -27,14 +27,17 @@ def json_to_dsl(json_data):
 
         while current_node['id'] != end_node['id']:
             # Find the next edge
-            next_edge = next((edge for edge in edges if edge['source'] == current_node['id']), None)
-            if next_edge is None:
-                raise ValueError(f"No outgoing edge found for node {current_node['id']}")
-            next_node = nodes[next_edge['target']]
-            if next_node['type'] == 'task':
-                task_name = next_node['data']['variants'][0]['name'].replace(" ", "")
-                connection_line += f' -> {task_name}'
-            current_node = next_node
+            next_edges = [edge for edge in edges if edge['source'] == current_node['id']]
+            for next_edge in next_edges:
+                if next_edge is None:
+                    raise ValueError(f"No outgoing edge found for node {current_node['id']}")
+                next_node = nodes[next_edge['target']]
+                if next_node['type'] == 'data':
+                    continue
+                if next_node['type'] == 'task':
+                    task_name = next_node['data']['variants'][0]['name'].replace(" ", "")
+                    connection_line += f' -> {task_name}'
+                current_node = next_node
 
         connection_line += ' -> END;'
         dsl_lines.append(connection_line)
