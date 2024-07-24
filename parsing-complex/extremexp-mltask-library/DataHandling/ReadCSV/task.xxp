@@ -1,0 +1,8 @@
+task ReadCSV {
+
+    define input data ExternalDataFile;
+    define output data Dataframe;
+
+    
+    implementation "extremexp-mltask-library/ReadCSV/read_csv.py"
+}
