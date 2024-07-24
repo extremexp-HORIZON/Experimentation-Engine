@@ -21,19 +21,27 @@ def json_to_dsl(json_data):
 
     # Task connections
     connection_line = '  // Task CONNECTIONS\n  START'
-    current_node = next(node for node in nodes.values() if node['type'] == 'start')
-    end_node = next(node for node in nodes.values() if node['type'] == 'end')
+    try:
+        current_node = next(node for node in nodes.values() if node['type'] == 'start')
+        end_node = next(node for node in nodes.values() if node['type'] == 'end')
 
-    while current_node['id'] != end_node['id']:
-        next_edge = next(edge for edge in edges if edge['source'] == current_node['id'])
-        next_node = nodes[next_edge['target']]
-        if next_node['type'] == 'task':
-            task_name = next_node['data']['variants'][0]['name'].replace(" ", "")
-            connection_line += f' -> {task_name}'
-        current_node = next_node
+        while current_node['id'] != end_node['id']:
+            # Find the next edge
+            next_edge = next((edge for edge in edges if edge['source'] == current_node['id']), None)
+            if next_edge is None:
+                raise ValueError(f"No outgoing edge found for node {current_node['id']}")
+            next_node = nodes[next_edge['target']]
+            if next_node['type'] == 'task':
+                task_name = next_node['data']['variants'][0]['name'].replace(" ", "")
+                connection_line += f' -> {task_name}'
+            current_node = next_node
 
-    connection_line += ' -> END;'
-    dsl_lines.append(connection_line)
+        connection_line += ' -> END;'
+        dsl_lines.append(connection_line)
+    except StopIteration:
+        dsl_lines.append('  // No start or end node found.')
+    except ValueError as e:
+        dsl_lines.append(f'  // Error: {e}')
 
     dsl_lines.append('')
 
@@ -52,7 +60,6 @@ def json_to_dsl(json_data):
             data_name = node['data']['name'].replace(" ", "")
             dsl_lines.append(f'\n  // DATA')
             dsl_lines.append(f'  define input data {data_name};')
-
 
     # Configure input data
     for node in json_data['nodes']:
@@ -87,7 +94,7 @@ def json_to_dsl(json_data):
                     dsl_lines.append('  }')
                     dsl_lines.append('}')
 
-    # Define experiment
+        # Define experiment
     dsl_lines.append('\nexperiment EXP {')
     dsl_lines.append('  intent FindBestClassifier;')
     dsl_lines.append('  control {')
@@ -117,9 +124,9 @@ def json_to_dsl(json_data):
                     dsl_lines.append('    }')
                     dsl_lines.append('  }')
 
+    dsl_lines.append('}')
+
     return '\n'.join(dsl_lines)
-
-
 
 
 def parse_dsl(dsl):

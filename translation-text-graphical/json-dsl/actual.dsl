@@ -21,11 +21,13 @@ workflow IDEKO {
       dependency "tasks/IDEKO/src/**";
   }
 }
+
 workflow variant-1-TrainModel from IDEKO {
   configure task TrainModelV1 {
       implementation "tasks/IDEKO/trainmodel.py";
   }
 }
+
 workflow variant-2-kO3W__nz32olBG_CUMgbI from IDEKO {
   configure task TrainModelV1 {
       implementation "tasks/IDEKO/trainmodel.py";
