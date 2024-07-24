@@ -21,6 +21,8 @@ import proactive_helper as ph
 
 # Model name
 folder_name = "NeuralNetwork"
+
+# TODO note: changed .h5 to .keras
 model_name = "model_nn.keras"
 
 # Path to store the model

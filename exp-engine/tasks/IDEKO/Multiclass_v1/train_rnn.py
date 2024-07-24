@@ -1,6 +1,8 @@
 import os
 import numpy as np
 [sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
+
+# TODO note: multiclass_models 
 from classes.multiclass_models import RecurrentNeuralNetwork
 from helpers.logger import LoggerHelper, logging
 from helpers.config import ConfigHelper
@@ -45,7 +47,11 @@ print(f"n_timestamps in train_rn task: {n_timestamps}")
 print(f"n_features in train_rn task: {n_features}")
 
 # Initialise the model class
-model_rnn = RecurrentNeuralNetwork(n_timestamps, n_features, activation_function, hidden_units)
+
+# TODO note: added n_classes parameter
+#model_rnn = RecurrentNeuralNetwork(n_timestamps, n_features, activation_function, hidden_units)
+model_rnn = RecurrentNeuralNetwork(n_timestamps, n_features, activation_function, hidden_units, n_classes)
+
 
 # Create the model (according to the architecture defined)
 model_rnn.create_model()
