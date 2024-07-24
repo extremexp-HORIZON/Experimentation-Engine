@@ -1,5 +1,6 @@
 import os
 import json
+import numpy as np
 [sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
 from classes import preprocessing_functions
 import proactive_helper as ph
@@ -15,8 +16,10 @@ n_timestamps = X_train.shape[1]
 n_features = X_train.shape[2]
 
 # TODO added following line, it doesn't run properly, so now number of classes is hardcoded 
-#n_classes = y_train.shape[1]
-n_classes = 3
+y_train = np.array(y_train)
+n_classes = y_train.shape[1]
+#n_classes = 3
+#print(y_train)
 
 ph.save_datasets(variables, ("n_timestamps", n_timestamps), ("n_features", n_features), ("n_classes", n_classes))
 ph.save_datasets(variables, ("X_train", X_train), ("X_test", X_test))
