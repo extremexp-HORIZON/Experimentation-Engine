@@ -108,13 +108,16 @@ def define_variant_workflows(nodes):
     for node in nodes.values():
         if node['type'] == 'task' and 'variants' in node['data']:
             if len(node['data']['variants']) > 1:
+                variant_number = 1
                 for variant in node['data']['variants']:
-                    workflow_name = variant['id_task']
+                    variant_name = variant['implementationRef']
+                    workflow_name = f"{variant_name}V{variant_number}"
                     lines.append(f'\nworkflow {workflow_name} from IDEKO_main {{')
                     lines.append(f'  configure task {variant["name"].replace(" ", "")} {{')
                     lines.append(f'    implementation "IDEKO-task-library.{variant["implementationRef"]}";')
                     lines.append('  }')
                     lines.append('}')
+                    variant_number=variant_number+1
     return '\n'.join(lines)
 
 
@@ -153,9 +156,6 @@ import json
 
 def extract_and_save_composite_node_details(nodes):
     dsl_lines = []
-    # Ensure `nodes` is a dictionary
-    if not isinstance(nodes, dict):
-        raise TypeError("`nodes` should be a dictionary")
 
     composite_nodes = [
         node for node in nodes.values()

@@ -29,13 +29,13 @@ workflow IDEKO_main {
     path "datasets/ideko-subset/**";
   }
 
-workflow variant-1-TrainModel from IDEKO_main {
+workflow TrainModelV1 from IDEKO_main {
   configure task TrainModel {
     implementation "IDEKO-task-library.TrainModel";
   }
 }
 
-workflow variant-2-kO3W__nz32olBG_CUMgbI from IDEKO_main {
+workflow TrainModelV2 from IDEKO_main {
   configure task TrainModel {
     implementation "IDEKO-task-library.TrainModel";
   }
