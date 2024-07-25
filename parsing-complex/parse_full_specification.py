@@ -62,5 +62,4 @@ def parse_implementation(main_dsl):
 with open(main_file_path, 'r') as main_file:
     main_dsl = main_file.read()
     parse_workflow(main_dsl)
-
     parse_implementation(main_dsl)

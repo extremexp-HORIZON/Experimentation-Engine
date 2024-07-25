@@ -1,6 +1,4 @@
-package IDEKO;
-
-workflow IDEKO_main {
+workflow IDEKO_DataPreprocessing {
   define task SplitData;
   define task AddPadding;
 
@@ -14,3 +12,5 @@ workflow IDEKO_main {
   configure task AddPadding {
     implementation "IDEKO-task-library.AddPadding";
   }
+
+}

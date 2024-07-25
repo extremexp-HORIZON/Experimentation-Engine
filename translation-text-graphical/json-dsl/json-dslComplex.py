@@ -25,6 +25,11 @@ def define_workflow(nodes, edges):
     lines = ["package IDEKO;", '\nworkflow IDEKO_main {']
     return '\n'.join(lines)
 
+def define_subworkflow(nodes, edges):
+    lines = ["workflow IDEKO_DataPreprocessing {"]
+    return '\n'.join(lines)
+
+
 
 def define_tasks(nodes):
     lines = []
@@ -181,11 +186,12 @@ def extract_and_save_composite_node_details(nodes):
         nodes = {node['id']: node for node in composite_node_details['nodes']}
         edges = composite_node_details['edges']
 
-        dsl_lines.append(define_workflow(nodes, edges))
+        dsl_lines.append(define_subworkflow(nodes, edges))
         dsl_lines.append(define_tasks(nodes))
         dsl_lines.append(task_connections(nodes, edges))
         dsl_lines.append('')
         dsl_lines.append(configure_tasks(nodes))
+        dsl_lines.append('}')
 
     return '\n'.join(dsl_lines)
 
