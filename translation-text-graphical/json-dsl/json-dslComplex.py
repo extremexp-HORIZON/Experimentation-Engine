@@ -15,6 +15,7 @@ def json_to_dsl(json_data):
     dsl_lines.append(configure_tasks(nodes))
     dsl_lines.append(define_input_data(nodes))
     dsl_lines.append(configure_input_data(nodes))
+    dsl_lines.append('}')
     dsl_lines.append(define_variant_workflows(nodes))
     dsl_lines.append(define_experiment(nodes))
     return '\n'.join(dsl_lines)
@@ -126,14 +127,16 @@ def define_experiment(nodes):
     lines.append('  intent FindBestClassifier;')
     lines.append('  control {')
     lines.append('    //Automated')
-    lines.append('    S1')
+    lines.append('    S1;')
     lines.append('  }')
 
     for node in nodes.values():
         if node['type'] == 'task' and 'variants' in node['data']:
             if len(node['data']['variants']) > 1:
+                variant_number = 1
                 for variant in node['data']['variants']:
-                    workflow_name = variant['id_task']
+                    variant_name = variant['implementationRef']
+                    workflow_name = f"{variant_name}V{variant_number}"
                     lines.append(f'\n  space S{variant["variant"]} of {workflow_name} {{')
                     lines.append('    strategy gridsearch;')
                     for param in variant['parameters']:
@@ -148,6 +151,7 @@ def define_experiment(nodes):
                         lines.append(f'      param {param_name} = {param_name}_vp;')
                     lines.append('    }')
                     lines.append('  }')
+                    variant_number = variant_number+1
 
     lines.append('}')
     return '\n'.join(lines)
@@ -205,7 +209,7 @@ edges = json_data['edges']
 dsl_lines = extract_and_save_composite_node_details(nodes)
 with open("IDEKO_DataPreprocessing.xxp", 'w') as file: file.write(dsl_lines)
 
-# with open('IDEKO_main.xxp', 'r') as file:
-#     main_workflow_code = file.read()
-#
-# parse_dsl(main_workflow_code)
+with open('IDEKO_main.xxp', 'r') as file:
+    main_workflow_code = file.read()
+
+parse_dsl(main_workflow_code)

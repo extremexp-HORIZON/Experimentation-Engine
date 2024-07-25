@@ -28,6 +28,7 @@ workflow IDEKO_main {
   configure data ExternalDataFile {
     path "datasets/ideko-subset/**";
   }
+}
 
 workflow TrainModelV1 from IDEKO_main {
   configure task TrainModel {
@@ -45,10 +46,10 @@ experiment EXP {
   intent FindBestClassifier;
   control {
     //Automated
-    S1
+    S1;
   }
 
-  space S1 of variant-1-TrainModel {
+  space S1 of TrainModelV1 {
     strategy gridsearch;
     param epochs_vp = range(2, 4);
     param batch_size_vp = enum(64);
@@ -58,7 +59,7 @@ experiment EXP {
     }
   }
 
-  space S2 of variant-2-kO3W__nz32olBG_CUMgbI {
+  space S2 of TrainModelV2 {
     strategy gridsearch;
     param epochs_vp = enum(2);
     param batch_size_vp = enum(32);
