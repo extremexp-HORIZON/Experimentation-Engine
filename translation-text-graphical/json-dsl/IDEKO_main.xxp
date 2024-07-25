@@ -30,15 +30,15 @@ workflow IDEKO_main {
   }
 }
 
-workflow TrainModelV1 from IDEKO_main {
+workflow TrainModelNN from IDEKO_main {
   configure task TrainModel {
-    implementation "IDEKO-task-library.TrainModel";
+    implementation "IDEKO-task-library.TrainModelNN";
   }
 }
 
-workflow TrainModelV2 from IDEKO_main {
+workflow TrainModelRNN from IDEKO_main {
   configure task TrainModel {
-    implementation "IDEKO-task-library.TrainModel";
+    implementation "IDEKO-task-library.TrainModelRNN";
   }
 }
 
@@ -49,7 +49,7 @@ experiment EXP {
     S1;
   }
 
-  space S1 of TrainModelV1 {
+  space S1 of TrainModelNN {
     strategy gridsearch;
     param epochs_vp = range(2, 4);
     param batch_size_vp = enum(64);
@@ -59,7 +59,7 @@ experiment EXP {
     }
   }
 
-  space S2 of TrainModelV2 {
+  space S2 of TrainModelRNN {
     strategy gridsearch;
     param epochs_vp = enum(2);
     param batch_size_vp = enum(32);

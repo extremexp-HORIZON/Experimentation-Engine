@@ -181,7 +181,7 @@
               "nodes": []
             },
             "id_task": "variant-1-TrainModel",
-            "implementationRef": "TrainModel",
+            "implementationRef": "TrainModelNN",
             "isAbstract": true,
             "is_composite": false,
             "name": "TrainModel",
@@ -212,7 +212,7 @@
             "description": "no description",
             "graphical_model": null,
             "id_task": "variant-2-kO3W__nz32olBG_CUMgbI",
-            "implementationRef": "TrainModel",
+            "implementationRef": "TrainModelRNN",
             "isAbstract": true,
             "is_composite": false,
             "name": "TrainModel",
@@ -251,7 +251,7 @@
         "x": 99.0075193053886,
         "y": 376.50805812417445
       },
-      "selected": false,
+      "selected": true,
       "type": "task",
       "width": 102
     },
@@ -539,7 +539,7 @@
         "x": 102.78770946061553,
         "y": 239.35932650602876
       },
-      "selected": true,
+      "selected": false,
       "type": "task",
       "width": 102
     }
