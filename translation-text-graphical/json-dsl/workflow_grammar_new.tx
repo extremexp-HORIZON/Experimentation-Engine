@@ -1,4 +1,5 @@
 Root:
+        ('package' name=ID ';')?
         component*=Component
 ;
 
@@ -11,7 +12,7 @@ Workflow:
 ;
 
 // Note: StartAndEndEvent has to be come BEFORE StartEvent in the next line
-Element: Node | DefineData | ConfigureTask | ConfigureData |  StartAndEndEvent | StartEvent | EndEvent | TaskLink | ConditionLink | DataLink | GroupTask | Comment;
+Element: Node | Data | ConfigureTask | ConfigureData |  StartAndEndEvent | StartEvent | EndEvent | TaskLink | ConditionLink | DataLink | GroupTask | Comment;
 
 Node:
     DefineTask | Operator
@@ -54,20 +55,24 @@ ConfigureTask:
 DefineTask: 'define task' name=ID ';';
 
 ConfigureData:
-    'configure data' alias=[DefineData] '{'
+    'configure data' alias=[Data] '{'
         'path' path=STRING';'
     '}';
 
 Operator: 'define operator' name=ID ';';
 
-DefineData: 'define data' name=ID '[''data=' data*=[Value][','] '];'  | 'define data' name=ID ';' ;
+Data: 'define data' name=ID '[''data=' data*=[Value][','] '];'  | 'define input data' name=ID ';' | 'define output data' name=ID ';' ;
 
 Value: STRING | INT | FLOAT | BOOL | "null";
 
 DataLink:
-    initial=[Node] ('-->' rest=[Data])* ';' |
-    initial=[Data] ('-->' rest=[Node])* ';'
+    initial=[Node] ('-->' rest=[Node] '.' restData=[Data])* ';' |
+    initial=[Data] ('-->' rest=[Node] '.' restData=[Data])* ';' |
+    rest=[Node] '.' restData=[Data] ('-->' rest=[Node] '.' restData=[Data])* ';' |
+    rest=[Node] '.' restData=[Data] ('-->' restData=[Data])* ';'
 ;
+
+
 
 ConditionLink: from_node=[Node] '->' condition=STRING '?' if_node=[Node]  ':' else_node=[Node] '->' continuation_Node=[Node] ';';
 
@@ -136,6 +141,7 @@ ParameterConfiguration: 'param' param_name=ID '=' vp=ID ';';
 
 Control:
         'control' '{'
+               expNode=[ExperimentNode]';'
                explink*=ExpLink
         '}';
 
@@ -156,15 +162,8 @@ RegularExpLink:
     ';'
 ;
 
-
 ConditionalExpLink:
     fromspace=[ExperimentNode] '?->' tospace=[ExperimentNode] '{' 'condition' condition=STRING '}' ';'
 ;
 
 Comment: /\/\/.*$/;
-
-
-
-
-
-

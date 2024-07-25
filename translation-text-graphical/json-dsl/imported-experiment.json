@@ -172,7 +172,7 @@
     },
     {
       "data": {
-        "currentVariant": "variant-2-kO3W__nz32olBG_CUMgbI",
+        "currentVariant": "variant-1-TrainModel",
         "variants": [
           {
             "description": "no description",
@@ -277,7 +277,7 @@
         "name": "ExternalDataFile"
       },
       "dragging": false,
-      "height": 77,
+      "height": 57,
       "id": "data-AUFFCj0fRhCMBMVow7ZiB",
       "position": {
         "x": -166.5300107071256,
@@ -289,7 +289,7 @@
       },
       "selected": false,
       "type": "data",
-      "width": 102
+      "width": 122
     },
     {
       "data": {
@@ -460,7 +460,7 @@
                     "x": 317.7760192132723,
                     "y": 250.69021471560905
                   },
-                  "selected": true,
+                  "selected": false,
                   "type": "task",
                   "width": 102
                 },
@@ -492,7 +492,7 @@
                           "nodes": []
                         },
                         "id_task": "variant-1-Qifsu6X2fymRh_h27f9CG",
-                        "implementationRef": "",
+                        "implementationRef": "AddPadding",
                         "isAbstract": true,
                         "is_composite": false,
                         "name": "AddPadding",
@@ -512,7 +512,7 @@
                     "x": 316.47194280234174,
                     "y": 147.0303850939618
                   },
-                  "selected": false,
+                  "selected": true,
                   "type": "task",
                   "width": 102
                 }

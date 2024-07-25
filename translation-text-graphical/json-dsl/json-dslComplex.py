@@ -8,25 +8,40 @@ def json_to_dsl(json_data):
     nodes = {node['id']: node for node in json_data['nodes']}
     edges = json_data['edges']
 
-    # Define the workflow
-    dsl_lines.append('workflow IDEKO_main {')
+    dsl_lines.append(define_workflow(nodes, edges))
+    dsl_lines.append(define_tasks(nodes))
+    dsl_lines.append(task_connections(nodes, edges))
+    dsl_lines.append('')
+    dsl_lines.append(configure_tasks(nodes))
+    dsl_lines.append(define_input_data(nodes))
+    dsl_lines.append(configure_input_data(nodes))
+    dsl_lines.append(define_variant_workflows(nodes))
+    dsl_lines.append(define_experiment(nodes))
+    return '\n'.join(dsl_lines)
 
-    # Define tasks
-    for node in json_data['nodes']:
+
+def define_workflow(nodes, edges):
+    lines = ["package IDEKO;", '\nworkflow IDEKO_main {']
+    return '\n'.join(lines)
+
+
+def define_tasks(nodes):
+    lines = []
+    for node in nodes.values():
         if node['type'] == 'task':
             task_name = node['data']['variants'][0]['name'].replace(" ", "")
-            dsl_lines.append(f'  define task {task_name};')
+            lines.append(f'  define task {task_name};')
+    lines.append('')
+    return '\n'.join(lines)
 
-    dsl_lines.append('')
 
-    # Task connections
-    connection_line = '  // Task CONNECTIONS\n  START'
+def task_connections(nodes, edges):
+    lines = ['  // Task CONNECTIONS\n  START']
     try:
         current_node = next(node for node in nodes.values() if node['type'] == 'start')
         end_node = next(node for node in nodes.values() if node['type'] == 'end')
 
         while current_node['id'] != end_node['id']:
-            # Find the next edge
             next_edges = [edge for edge in edges if edge['source'] == current_node['id']]
             for next_edge in next_edges:
                 if next_edge is None:
@@ -36,101 +51,139 @@ def json_to_dsl(json_data):
                     continue
                 if next_node['type'] == 'task':
                     task_name = next_node['data']['variants'][0]['name'].replace(" ", "")
-                    connection_line += f' -> {task_name}'
+                    lines.append(f' -> {task_name}')
                 current_node = next_node
 
-        connection_line += ' -> END;'
-        dsl_lines.append(connection_line)
+        lines.append(' -> END;')
     except StopIteration:
-        dsl_lines.append('  // No start or end node found.')
+        lines.append('  // No start or end node found.')
     except ValueError as e:
-        dsl_lines.append(f'  // Error: {e}')
+        lines.append(f'  // Error: {e}')
 
-    dsl_lines.append('')
+    lines.append('')
+    return ''.join(lines)
 
-    # Configure tasks with their implementations
-    for node in json_data['nodes']:
+
+def configure_tasks(nodes):
+    lines = []
+    for node in nodes.values():
         if node['type'] == 'task':
             task_name = node['data']['variants'][0]['name'].replace(" ", "")
             implementation = node['data']['variants'][0]['implementationRef']
-            dsl_lines.append(f'  configure task {task_name} {{')
-            dsl_lines.append(f'    implementation "IDEKO-task-library.{implementation}";')
-            dsl_lines.append(f'  }}')
 
-    # Define input data
-    for node in json_data['nodes']:
+            if len(node['data']['variants']) == 1 and implementation != "":
+                lines.append(f'  configure task {task_name} {{')
+                lines.append(f'    implementation "IDEKO-task-library.{implementation}";')
+                lines.append(f'  }}\n')
+            elif len(node['data']['variants']) == 1 and implementation == "":
+                lines.append(f'  configure task {task_name} {{')
+                lines.append(f'    implementation "IDEKO-experiment1.IDEKO_DataPreprocessing";')
+                lines.append(f'  }}\n')
+    return '\n'.join(lines)
+
+
+def define_input_data(nodes):
+    lines = []
+    for node in nodes.values():
         if node['type'] == 'data':
             data_name = node['data']['name'].replace(" ", "")
-            dsl_lines.append(f'\n  // DATA')
-            dsl_lines.append(f'  define input data {data_name};')
+            lines.append(f'\n  // DATA')
+            lines.append(f'  define input data {data_name};')
+    return '\n'.join(lines)
 
-    # Configure input data
-    for node in json_data['nodes']:
+
+def configure_input_data(nodes):
+    lines = []
+    for node in nodes.values():
         if node['type'] == 'data':
             data_name = node['data']['name'].replace(" ", "")
-            dsl_lines.append(f'\n  configure data {data_name} {{')
-            dsl_lines.append('    path "datasets/ideko-subset/**";')
-            dsl_lines.append('  }}')
+            lines.append(f'\n  configure data {data_name} {{')
+            lines.append('    path "datasets/ideko-subset/**";')
+            lines.append('  }')
+    return '\n'.join(lines)
 
-    dsl_lines.append('}')
 
-    # Define variant workflows
-    # for node in json_data['nodes']:
-    #     if node['type'] == 'task' and 'variants' in node['data']:
-    #         for variant in node['data']['variants']:
-    #             if variant['variant'] > 1:
-    #                 workflow_name = variant['id_task']
-    #                 dsl_lines.append(f'\nworkflow {workflow_name} from IDEKO_main {{')
-    #                 dsl_lines.append(f'  configure task {variant["name"].replace(" ", "")} {{')
-    #                 dsl_lines.append(f'    implementation "IDEKO-task-library.{variant["implementationRef"]}";')
-    #                 dsl_lines.append('  }')
-    #                 dsl_lines.append('}')
-
-    for node in json_data['nodes']:
+def define_variant_workflows(nodes):
+    lines = []
+    for node in nodes.values():
         if node['type'] == 'task' and 'variants' in node['data']:
             if len(node['data']['variants']) > 1:
                 for variant in node['data']['variants']:
                     workflow_name = variant['id_task']
-                    dsl_lines.append(f'\nworkflow {workflow_name} from IDEKO_main {{')
-                    dsl_lines.append(f'  configure task {variant["name"].replace(" ", "")} {{')
-                    dsl_lines.append(f'    implementation "IDEKO-task-library.{variant["implementationRef"]}";')
-                    dsl_lines.append('  }')
-                    dsl_lines.append('}')
+                    lines.append(f'\nworkflow {workflow_name} from IDEKO_main {{')
+                    lines.append(f'  configure task {variant["name"].replace(" ", "")} {{')
+                    lines.append(f'    implementation "IDEKO-task-library.{variant["implementationRef"]}";')
+                    lines.append('  }')
+                    lines.append('}')
+    return '\n'.join(lines)
 
-        # Define experiment
-    dsl_lines.append('\nexperiment EXP {')
-    dsl_lines.append('  intent FindBestClassifier;')
-    dsl_lines.append('  control {')
-    dsl_lines.append('    //Automated')
-    dsl_lines.append('    S1')
-    dsl_lines.append('  }')
 
-    for node in json_data['nodes']:
+def define_experiment(nodes):
+    lines = ['\nexperiment EXP {']
+    lines.append('  intent FindBestClassifier;')
+    lines.append('  control {')
+    lines.append('    //Automated')
+    lines.append('    S1')
+    lines.append('  }')
+
+    for node in nodes.values():
         if node['type'] == 'task' and 'variants' in node['data']:
             if len(node['data']['variants']) > 1:
                 for variant in node['data']['variants']:
                     workflow_name = variant['id_task']
-
-                    dsl_lines.append(f'\n  space S{variant["variant"]} of {workflow_name} {{')
-                    dsl_lines.append('    strategy gridsearch;')
-
+                    lines.append(f'\n  space S{variant["variant"]} of {workflow_name} {{')
+                    lines.append('    strategy gridsearch;')
                     for param in variant['parameters']:
                         param_name = param['name']
                         param_values = ', '.join(map(str, param['values']))
                         param_type = 'enum' if len(param['values']) == 1 else 'range'
-                        dsl_lines.append(f'    param {param_name}_vp = {param_type}({param_values});')
+                        lines.append(f'    param {param_name}_vp = {param_type}({param_values});')
 
-                    dsl_lines.append(f'    configure task {variant["name"].replace(" ", "")} {{')
+                    lines.append(f'    configure task {variant["name"].replace(" ", "")} {{')
                     for param in variant['parameters']:
                         param_name = param['name']
-                        dsl_lines.append(f'      param {param_name} = {param_name}_vp;')
-                    dsl_lines.append('    }')
-                    dsl_lines.append('  }')
+                        lines.append(f'      param {param_name} = {param_name}_vp;')
+                    lines.append('    }')
+                    lines.append('  }')
 
-    dsl_lines.append('}')
+    lines.append('}')
+    return '\n'.join(lines)
+
+import json
+
+def extract_and_save_composite_node_details(nodes):
+    dsl_lines = []
+    # Ensure `nodes` is a dictionary
+    if not isinstance(nodes, dict):
+        raise TypeError("`nodes` should be a dictionary")
+
+    composite_nodes = [
+        node for node in nodes.values()
+        if isinstance(node, dict) and 'data' in node and 'variants' in node['data']
+        and any(variant.get('is_composite', False) for variant in node['data']['variants'])
+    ]
+
+    if composite_nodes:
+        composite_node = composite_nodes[0]
+        variant = composite_node['data']['variants'][0]
+        composite_node_details = {
+            'id': composite_node['id'],
+            'name': variant['name'],
+            'description': variant.get('description', ''),
+            'nodes': variant['graphical_model']['nodes'],
+            'edges': variant['graphical_model']['edges']
+        }
+
+        nodes = {node['id']: node for node in composite_node_details['nodes']}
+        edges = composite_node_details['edges']
+
+        dsl_lines.append(define_workflow(nodes, edges))
+        dsl_lines.append(define_tasks(nodes))
+        dsl_lines.append(task_connections(nodes, edges))
+        dsl_lines.append('')
+        dsl_lines.append(configure_tasks(nodes))
 
     return '\n'.join(dsl_lines)
-
 
 def parse_dsl(dsl):
     workflow_metamodel = textx.metamodel_from_file('workflow_grammar_new.tx')
@@ -139,19 +192,20 @@ def parse_dsl(dsl):
     if workflow_model:
         print("Successfully Parsed!")
 
-
-
 with open('imported-experiment.json', 'r') as file:
     json_data = json.load(file)
 
 dsl_output = json_to_dsl(json_data)
-print(dsl_output)
+# print(dsl_output)
+with open("IDEKO_main.xxp", "w") as file: file.write(dsl_output)
 
 
-# with open('expected.dsl', 'r') as file:
-#     no_events_workflow_code = file.read()
+nodes = {node['id']: node for node in json_data['nodes']}
+edges = json_data['edges']
+dsl_lines = extract_and_save_composite_node_details(nodes)
+with open("IDEKO_DataPreprocessing.xxp", 'w') as file: file.write(dsl_lines)
+
+# with open('IDEKO_main.xxp', 'r') as file:
+#     main_workflow_code = file.read()
 #
-# workflow_metamodel = textx.metamodel_from_file('../dsl/workflow_grammar_new.tx')
-# no_events_workflow_model = workflow_metamodel.model_from_str(no_events_workflow_code)
-
-# parse_dsl(dsl_output)
+# parse_dsl(main_workflow_code)
