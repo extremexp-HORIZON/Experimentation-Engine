@@ -25,6 +25,11 @@ def define_workflow(nodes, edges):
     lines = ["package IDEKO;", '\nworkflow IDEKO_main {']
     return '\n'.join(lines)
 
+def define_subworkflow(nodes, edges):
+    lines = ["workflow IDEKO_DataPreprocessing {"]
+    return '\n'.join(lines)
+
+
 
 def define_tasks(nodes):
     lines = []
@@ -109,16 +114,13 @@ def define_variant_workflows(nodes):
     for node in nodes.values():
         if node['type'] == 'task' and 'variants' in node['data']:
             if len(node['data']['variants']) > 1:
-                variant_number = 1
                 for variant in node['data']['variants']:
-                    variant_name = variant['implementationRef']
-                    workflow_name = f"{variant_name}V{variant_number}"
+                    workflow_name = variant['implementationRef']
                     lines.append(f'\nworkflow {workflow_name} from IDEKO_main {{')
                     lines.append(f'  configure task {variant["name"].replace(" ", "")} {{')
                     lines.append(f'    implementation "IDEKO-task-library.{variant["implementationRef"]}";')
                     lines.append('  }')
                     lines.append('}')
-                    variant_number=variant_number+1
     return '\n'.join(lines)
 
 
@@ -133,10 +135,8 @@ def define_experiment(nodes):
     for node in nodes.values():
         if node['type'] == 'task' and 'variants' in node['data']:
             if len(node['data']['variants']) > 1:
-                variant_number = 1
                 for variant in node['data']['variants']:
-                    variant_name = variant['implementationRef']
-                    workflow_name = f"{variant_name}V{variant_number}"
+                    workflow_name = variant['implementationRef']
                     lines.append(f'\n  space S{variant["variant"]} of {workflow_name} {{')
                     lines.append('    strategy gridsearch;')
                     for param in variant['parameters']:
@@ -151,7 +151,6 @@ def define_experiment(nodes):
                         lines.append(f'      param {param_name} = {param_name}_vp;')
                     lines.append('    }')
                     lines.append('  }')
-                    variant_number = variant_number+1
 
     lines.append('}')
     return '\n'.join(lines)
@@ -181,11 +180,12 @@ def extract_and_save_composite_node_details(nodes):
         nodes = {node['id']: node for node in composite_node_details['nodes']}
         edges = composite_node_details['edges']
 
-        dsl_lines.append(define_workflow(nodes, edges))
+        dsl_lines.append(define_subworkflow(nodes, edges))
         dsl_lines.append(define_tasks(nodes))
         dsl_lines.append(task_connections(nodes, edges))
         dsl_lines.append('')
         dsl_lines.append(configure_tasks(nodes))
+        dsl_lines.append('}')
 
     return '\n'.join(dsl_lines)
 
@@ -212,4 +212,10 @@ with open("IDEKO_DataPreprocessing.xxp", 'w') as file: file.write(dsl_lines)
 with open('IDEKO_main.xxp', 'r') as file:
     main_workflow_code = file.read()
 
+with open('IDEKO_DataPreprocessing.xxp', 'r') as file:
+    sub_workflow_code = file.read()
+
+print("Parsing IDEKO_main.xxp: ")
 parse_dsl(main_workflow_code)
+print("Parsing IDEKO_DataPreprocessing.xxp: ")
+parse_dsl(sub_workflow_code)
