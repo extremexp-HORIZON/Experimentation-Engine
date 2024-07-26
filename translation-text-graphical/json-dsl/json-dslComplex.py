@@ -104,7 +104,8 @@ def configure_input_data(nodes):
         if node['type'] == 'data':
             data_name = node['data']['name'].replace(" ", "")
             lines.append(f'\n  configure data {data_name} {{')
-            lines.append('    path "datasets/ideko-subset/**";')
+            path = node['data']['path'].replace(" ", "")
+            lines.append(f'    path "{path}";')
             lines.append('  }')
     return '\n'.join(lines)
 

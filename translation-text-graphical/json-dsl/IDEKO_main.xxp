@@ -26,7 +26,7 @@ workflow IDEKO_main {
   define input data ExternalDataFile;
 
   configure data ExternalDataFile {
-    path "datasets/ideko-subset/**";
+    path "IDEKO1";
   }
 }
 
