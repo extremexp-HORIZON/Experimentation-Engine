@@ -3,6 +3,7 @@ import numpy as np
 [sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
 from classes.multiclass_models import NeuralNetwork
 import proactive_helper as ph
+import tensorflow.keras as keras
 
 # NeuralNetwork:
 # enabled: True
@@ -31,6 +32,9 @@ output_path = os.path.join(working_dir, "output")
 output_path_nn = os.path.join(output_path, folder_name)
 os.makedirs(output_path_nn, exist_ok = True)
 
+# TODO note: creating directory to save the trained model
+model_path = ph.create_dir(variables, 'trained_model')
+
 # Parameters defining the architecture of the model
 
 # Activation function
@@ -43,7 +47,6 @@ units =[100, 100, 100]
 epochs = int(variables.get("epochs"))
 batch_size = int(variables.get("batch_size"))
 
-# TODO added n_classes to the following line
 n_timestamps, n_features, n_classes = ph.load_datasets(variables, "n_timestamps", "n_features", "n_classes")
 X_train, y_train = ph.load_datasets(variables, "X_train", "y_train")
 X_test, y_test = ph.load_datasets(variables, "X_test", "y_test")
@@ -59,7 +62,6 @@ print(f"n_features in train_nn task: {n_features}")
 model_nn = NeuralNetwork(n_timestamps, n_features, activation_function, units, n_classes)
 
 
-
 # Create the model (according to the architecture defined)
 model_nn.create_model()
 
@@ -73,17 +75,18 @@ model_nn.model_compilation(model_nn.model)
 
 y_train = np.asarray(y_train)
 y_test = np.asarray(y_test)
-print(f"X_train: {X_train}")
 history_nn = model_nn.model_fitting(model_nn.model, X_train, y_train, X_test, y_test, callback_list, epochs, batch_size)
 
 # Plot history of the model
 # preprocessing_functions.plot_model_history(history_nn, output_path_nn)
 
-# Model evaluation
-Y_pad = np.asarray(Y_pad)
-resultMap = model_nn.model_evaluation(model_nn.model, X_pad, Y_pad, X_test, y_test, variables, resultMap)
+# TODO note: added following lines to save trained model
+model = model_nn.model
+model_path = os.path.join(model_path, model_name)
+model.save(model_path)
 
-# TODO added those two lines
-model_nn.compute_metrics(model_nn.model, X_pad, Y_pad)
-model_nn.compute_metrics(model_nn.model, X_test, y_test)
-
+# TODO note: added following lines to save intermediate data for the next task
+ph.save_datasets(variables, ("model_path", model_path))
+ph.save_datasets(variables, ("X_test", X_test))
+ph.save_datasets(variables, ("y_test", y_test))
+ph.save_datasets(variables, ("X_pad", X_pad), ("Y_pad", Y_pad))
