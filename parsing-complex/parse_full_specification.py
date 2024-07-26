@@ -27,16 +27,13 @@ def read_task_file(implementation):
 def parse_workflow(dsl):
     workflow_metamodel = textx.metamodel_from_file('workflow_grammar_new.tx')
     workflow_model = workflow_metamodel.model_from_str(dsl)
+    return workflow_model
 
-    if workflow_model:
-        print("Successfully Parsed!")
 
 def parse_task(dsl):
     workflow_metamodel = textx.metamodel_from_file('task_grammar.tx')
     workflow_model = workflow_metamodel.model_from_str(dsl)
-
-    if workflow_model:
-        print("Successfully Parsed!")
+    return workflow_model
 
 
 def parse_implementation(main_dsl):
@@ -51,9 +48,11 @@ def parse_implementation(main_dsl):
                 task_dsl = task_content
                 print(task_dsl)
                 if 'IDEKO-experiment1' in implementation:
-                    parse_workflow(task_dsl)
+                    workflow_model = parse_workflow(task_dsl)
                 else:
-                    parse_task(task_dsl)
+                    workflow_model = parse_task(task_dsl)
+                if workflow_model:
+                    print("Successfully Parsed!")
             else:
                 print(f"No content found for {implementation}")
         else:
