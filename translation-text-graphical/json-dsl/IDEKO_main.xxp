@@ -11,10 +11,12 @@ workflow IDEKO_main {
 
   configure task ReadData {
     implementation "IDEKO-task-library.ReadData";
+    dependency "tasks/IDEKO/Binary_v1/src/**";
   }
 
   configure task EvaluateModel {
     implementation "IDEKO-task-library.EvaluateModel";
+    dependency "tasks/IDEKO/Binary_v1/src/**";
   }
 
   configure task PrepareData {
@@ -24,6 +26,9 @@ workflow IDEKO_main {
 
   // DATA
   define input data ExternalDataFile;
+
+  // DATA CONNECTIONS
+  ExternalDataFile --> ReadData.ExternalDataFile;
 
   configure data ExternalDataFile {
     path "IDEKO1";
@@ -46,7 +51,7 @@ experiment EXP {
   intent FindBestClassifier;
   control {
     //Automated
-    S1;
+    S1 -> E1;
   }
 
   space S1 of TrainModelNN {
@@ -68,4 +73,9 @@ experiment EXP {
       param batch_size = batch_size_vp;
     }
   }
+   event E1 {
+            type automated;
+            condition "the accuracy of the 5 lastly trained ML models is > 50%";
+            task check_accuracy_over_workflows_of_last_space; 
+   } 
 }

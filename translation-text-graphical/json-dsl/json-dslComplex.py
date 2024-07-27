@@ -14,6 +14,7 @@ def json_to_dsl(json_data):
     dsl_lines.append('')
     dsl_lines.append(configure_tasks(nodes))
     dsl_lines.append(define_input_data(nodes))
+    dsl_lines.append(data_connection(nodes))
     dsl_lines.append(configure_input_data(nodes))
     dsl_lines.append('}')
     dsl_lines.append(define_variant_workflows(nodes))
@@ -80,6 +81,7 @@ def configure_tasks(nodes):
             if len(node['data']['variants']) == 1 and implementation != "":
                 lines.append(f'  configure task {task_name} {{')
                 lines.append(f'    implementation "IDEKO-task-library.{implementation}";')
+                lines.append(f'    dependency "tasks/IDEKO/Binary_v1/src/**";')
                 lines.append(f'  }}\n')
             elif len(node['data']['variants']) == 1 and implementation == "":
                 lines.append(f'  configure task {task_name} {{')
@@ -109,6 +111,14 @@ def configure_input_data(nodes):
             lines.append('  }')
     return '\n'.join(lines)
 
+def data_connection(nodes):
+    lines = []
+    lines.append(f'\n  // DATA CONNECTIONS')
+    for node in nodes.values():
+        if node['type'] == 'data':
+            data_name = node['data']['name'].replace(" ", "")
+            lines.append(f'  {data_name} --> ReadData.{data_name};')
+    return '\n'.join(lines)
 
 def define_variant_workflows(nodes):
     lines = []
@@ -130,7 +140,7 @@ def define_experiment(nodes):
     lines.append('  intent FindBestClassifier;')
     lines.append('  control {')
     lines.append('    //Automated')
-    lines.append('    S1;')
+    lines.append('    S1 -> E1;')
     lines.append('  }')
 
     for node in nodes.values():
@@ -152,6 +162,12 @@ def define_experiment(nodes):
                         lines.append(f'      param {param_name} = {param_name}_vp;')
                     lines.append('    }')
                     lines.append('  }')
+
+    lines.append('''   event E1 {
+            type automated;
+            condition "the accuracy of the 5 lastly trained ML models is > 50%";
+            task check_accuracy_over_workflows_of_last_space; 
+   } ''')
 
     lines.append('}')
     return '\n'.join(lines)
