@@ -274,7 +274,8 @@
     },
     {
       "data": {
-        "name": "ExternalDataFile"
+        "name": "ExternalDataFile",
+        "path": "IDEKO1"
       },
       "dragging": false,
       "height": 57,
@@ -545,3 +546,4 @@
     }
   ]
 }
+
