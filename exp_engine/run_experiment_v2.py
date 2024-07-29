@@ -7,7 +7,7 @@ import os
 import pprint
 import random
 
-EXPERIMENTS_FOLDER = '../dsl/mid-term/'
+EXPERIMENTS_FOLDER = 'IDEKO-experiment1/'
 EXECUTIONWARE = "PROACTIVE"
 
 printexperiments = []
@@ -180,82 +180,142 @@ def execute_node(node):
         return execute_manual_event(node)
 
 
-dsl_file = input("Please provide the name of the DSL file (without the extension):")
+def get_task_implementation_path(implementation):
+    task_library_path = 'IDEKO-task-library'
+    experiment1_path = 'IDEKO-experiment1'
+    mltask_library_path = 'extremexp-mltask-library'
+    parts = implementation.split('.')
+    print(implementation)
+    if parts[0] == 'IDEKO-experiment1':
+        return os.path.join(experiment1_path, parts[1] + '.xxp'), "composite"
+    if parts[0] == 'IDEKO-task-library':
+        folder_path = os.path.join(task_library_path, parts[1])
+        return parse_task(folder_path),"simple"
+    if parts[0] == 'extremexp-mltask-library':
+        folder_path = os.path.join(mltask_library_path, parts[1])
+        return parse_task(folder_path), "simple"
+    else:
+        return None, None
 
-with open(EXPERIMENTS_FOLDER + dsl_file + '.dsl', 'r') as file:
+def parse_task(folder_path):
+    file_path = os.path.join(folder_path, 'task.xxp')
+    print(file_path)
+    with open(file_path, 'r') as task_file:
+        task_dsl= task_file.read()
+    workflow_metamodel = textx.metamodel_from_file('IDEKO-experiment1/task_grammar.tx')
+    workflow_model = workflow_metamodel.model_from_str(task_dsl)
+    for component in workflow_model.component:
+        for e in component.elements:
+            if e.__class__.__name__ == "Implementation":
+                if e.filename:
+                    print(e.filename)
+                    if not os.path.exists(e.filename):
+                        raise exp_engine_exceptions.ImplementationFileNotFound(f"{e.filename}")
+                return e.filename
+
+def get_workflow_components(experiment_model,parsed_workflows,task_dependencies):
+    for component in experiment_model.component:
+        if component.__class__.__name__ == 'Workflow':
+            wf = classes.Workflow(component.name)
+
+            parsed_workflows.append(wf)
+
+            for e in component.elements:
+                if e.__class__.__name__ == "DefineTask":
+                    task = classes.WorkflowTask(e.name)
+                    wf.add_task(task)
+
+                if e.__class__.__name__ == "Data":
+                    ds = classes.WorkflowDataset(e.name)
+                    print(ds)
+                    wf.add_dataset(ds)
+
+                if e.__class__.__name__ == "ConfigureTask":
+                    task = wf.get_task(e.alias.name)
+                    # if e.workflow:
+                    #     task.add_sub_workflow_name(e.workflow.name)
+                    if e.filename:
+                        implementation = e.filename
+                        task_file_path, task_type = get_task_implementation_path(implementation)
+                        print(task_file_path)
+                        if not os.path.exists(task_file_path):
+                            raise exp_engine_exceptions.ImplementationFileNotFound(
+                                f"{task_file_path} in task {e.alias.name}")
+                        if task_type == "composite":
+                            with open(task_file_path) as file:
+                                workflow_specification = file.read()
+                                # print(workflow_specification)
+                                subworkflow_model = experiments_metamodel.model_from_str(workflow_specification)
+                                wf, parsed_workflows, task_dependencies = get_workflow_components(subworkflow_model,parsed_workflows,task_dependencies)
+                                task.add_sub_workflow(wf)
+                                task.add_sub_workflow_name(wf.name)
+                        else:
+                            task.add_implementation_file(task_file_path)
+                    if e.dependency:
+                        task.add_dependent_module(e.dependency)
+
+                if e.__class__.__name__ == "ConfigureData":
+                    print(e.alias.name)
+                    ds = wf.get_dataset(e.alias.name)
+                    ds.add_path(e.path)
+
+                if e.__class__.__name__ == "StartAndEndEvent":
+                    functions.process_dependencies(task_dependencies, e.nodes, "StartAndEndEvent")
+
+                if e.__class__.__name__ == "StartEvent":
+                    functions.process_dependencies(task_dependencies, e.nodes, "StartEvent")
+
+                if e.__class__.__name__ == "EndEvent":
+                    functions.process_dependencies(task_dependencies, e.nodes, "EndEvent")
+
+                if e.__class__.__name__ == "TaskLink":
+                    functions.process_dependencies(task_dependencies, [e.initial_node] + e.nodes, "TaskLink")
+
+                if e.__class__.__name__ == "DataLink":
+                    functions.add_input_output_data(wf, [e.initial] + e.rest)
+
+                if e.__class__.__name__ == "ConditionLink":
+                    condition = e.condition
+                    fromNode = e.from_node
+                    ifNode = e.if_node
+                    elseNode = e.else_node
+                    contNode = e.continuation_Node
+
+                    conditional_task = wf.get_task(e.from_node.name)
+                    conditional_task.set_conditional_tasks(ifNode.name, elseNode.name, contNode.name, condition)
+
+    return wf, parsed_workflows, task_dependencies
+
+
+# dsl_file = input("Please provide the name of the DSL file (without the extension):")
+
+dsl_file="IDEKO_main"
+
+with open(EXPERIMENTS_FOLDER + dsl_file + '.xxp', 'r') as file:
     experiment_specification = file.read()
 
-experiments_metamodel = textx.metamodel_from_file('../dsl/workflow_grammar_new.tx')
+experiments_metamodel = textx.metamodel_from_file('IDEKO-experiment1/workflow_grammar_new_v2.tx')
 experiment_model = experiments_metamodel.model_from_str(experiment_specification)
 
 
 print("*********************************************************")
 print("***************** PARSE WORKFLOWS ***********************")
 print("*********************************************************")
-
 parsed_workflows = []
-for component in experiment_model.component:
-    if component.__class__.__name__ == 'Workflow':
-        wf = classes.Workflow(component.name)
-        parsed_workflows.append(wf)
+task_dependencies = {}
 
-        task_dependencies = {}
+_, parsed_workflows, task_dependencies = get_workflow_components(experiment_model, parsed_workflows, task_dependencies)
 
-        for e in component.elements:
-            if e.__class__.__name__ == "DefineTask":
-                task = classes.WorkflowTask(e.name)
-                wf.add_task(task)
+print(parsed_workflows)
+print(task_dependencies)
 
-            if e.__class__.__name__ == "DefineData":
-                ds = classes.WorkflowDataset(e.name)
-                wf.add_dataset(ds)
-
-            if e.__class__.__name__ == "ConfigureTask":
-                task = wf.get_task(e.alias.name)
-                if e.workflow:
-                    task.add_sub_workflow_name(e.workflow.name)
-                elif e.filename:
-                    if not os.path.exists(e.filename):
-                        raise exp_engine_exceptions.ImplementationFileNotFound(f"{e.filename} in task {e.alias.name}")
-                    task.add_implementation_file(e.filename)
-                if e.dependency:
-                    task.add_dependent_module(e.dependency)
-
-            if e.__class__.__name__ == "ConfigureData":
-                ds = wf.get_dataset(e.alias.name)
-                ds.add_path(e.path)
-
-            if e.__class__.__name__ == "StartAndEndEvent":
-                functions.process_dependencies(task_dependencies, e.nodes, "StartAndEndEvent")
-
-            if e.__class__.__name__ == "StartEvent":
-                functions.process_dependencies(task_dependencies, e.nodes, "StartEvent")
-
-            if e.__class__.__name__ == "EndEvent":
-                functions.process_dependencies(task_dependencies, e.nodes, "EndEvent")
-
-            if e.__class__.__name__ == "TaskLink":
-                functions.process_dependencies(task_dependencies, [e.initial_node] + e.nodes, "TaskLink")
-
-            if e.__class__.__name__ == "DataLink":
-                functions.add_input_output_data(wf, [e.initial] + e.rest)
-
-            if e.__class__.__name__ == "ConditionLink":
-                condition = e.condition
-                fromNode = e.from_node
-                ifNode = e.if_node
-                elseNode = e.else_node
-                contNode = e.continuation_Node
-
-                conditional_task = wf.get_task(e.from_node.name)
-                conditional_task.set_conditional_tasks(ifNode.name, elseNode.name, contNode.name, condition)
-
-functions.apply_task_dependencies_and_set_order(wf, task_dependencies)
+for wf in parsed_workflows:
+    functions.apply_task_dependencies_and_set_order(wf, task_dependencies)
 
 functions.set_is_main_attribute(parsed_workflows)
 
 for wf in parsed_workflows:
-            wf.print()
+    wf.print()
 
 
 print("*********************************************************")
@@ -281,9 +341,12 @@ for component in experiment_model.component:
                     assembled_workflow_task["workflow"] = config.workflow
                     assembled_workflow_tasks[config.alias.name] = assembled_workflow_task
                 elif config.filename:
-                    if not os.path.exists(config.filename):
-                        raise exp_engine_exceptions.ImplementationFileNotFound(f"{config.filename} in task {config.alias.name}")
-                    assembled_workflow_task["implementation"] = config.filename
+                    implementation = config.filename
+                    task_file_path,_ = get_task_implementation_path(implementation)
+                    # print(task_file_path)
+                    if not os.path.exists(task_file_path):
+                        raise exp_engine_exceptions.ImplementationFileNotFound(f"{task_file_path} in task {config.alias.name}")
+                    assembled_workflow_task["implementation"] = task_file_path
                     assembled_workflow_tasks[config.alias.name] = assembled_workflow_task
                 configurations.remove(config)
                 configurations += config.subtasks
@@ -532,6 +595,21 @@ for component in experiment_model.component:
                                 manual_dict[explink.fromspace.name][explink.condition] = explink.tospace.name
                 print('------------------------------------------')
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # print("Nodes: ",nodes)
 # print("Automated Events:", automated_events)
 # print("Manual Events",manual_events)
@@ -565,7 +643,7 @@ for component in experiment_model.component:
 # for space_config in space_configs:
 #     pp.pprint(space_config)
 #     print()
-
+#
 print("\n*********************************************************")
 print("***************** RUNNING WORKFLOWS ***********************")
 print("*********************************************************")
