@@ -566,20 +566,20 @@ for component in experiment_model.component:
 #     pp.pprint(space_config)
 #     print()
 
-print("\n*********************************************************")
-print("***************** RUNNING WORKFLOWS ***********************")
-print("*********************************************************")
-start_node = list(nodes)[0]
-print("Start Node: ", start_node)
-node = start_node
-
-result = execute_node(node)
-while node in automated_dict:
-    next_action = automated_dict[node]
-    node = next_action[result]
-    result = execute_node(node)
-
-
+# print("\n*********************************************************")
+# print("***************** RUNNING WORKFLOWS ***********************")
+# print("*********************************************************")
+# start_node = list(nodes)[0]
+# print("Start Node: ", start_node)
+# node = start_node
+#
+# result = execute_node(node)
+# while node in automated_dict:
+#     next_action = automated_dict[node]
+#     node = next_action[result]
+#     result = execute_node(node)
+#
+#
 
 
 
