@@ -14,8 +14,4 @@ indicator_list = ["f3"]
 X, Y = preprocessing_functions.read_data(input_data_folder, indicator_list)
 logger.info("Summary of timeseries length %s" %pd.Series([len(x) for x in X]).describe())
 
-print("*****")
-print(variables.get("text_to_print"))
-print("*****")
-
 ph.save_datasets(variables, ("X", X), ("Y", Y), ("indicator_list", indicator_list))
