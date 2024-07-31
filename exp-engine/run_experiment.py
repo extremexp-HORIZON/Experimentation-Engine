@@ -7,7 +7,7 @@ import os
 import pprint
 import random
 
-EXPERIMENTS_FOLDER = '../dsl/mid-term/'
+EXPERIMENTS_FOLDER = '../dsl/mid-term-i2cat/'
 EXECUTIONWARE = "PROACTIVE"
 
 printexperiments = []
@@ -292,7 +292,6 @@ import pprint
 pp = pprint.PrettyPrinter(indent=4)
 pp.pprint(assembled_workflows_data)
 
-
 print("*********************************************************")
 print("************ GENERATE ASSEMBLED WORKFLOWS ***************")
 print("*********************************************************")
@@ -532,10 +531,10 @@ for component in experiment_model.component:
                                 manual_dict[explink.fromspace.name][explink.condition] = explink.tospace.name
                 print('------------------------------------------')
 
-# print("Nodes: ",nodes)
-# print("Automated Events:", automated_events)
-# print("Manual Events",manual_events)
-# print("Spaces: ", spaces)
+print("Nodes: ",nodes)
+print("Automated Events:", automated_events)
+print("Manual Events",manual_events)
+print("Spaces: ", spaces)
 
 
 # print("Spaces Config: ")
@@ -569,6 +568,7 @@ for component in experiment_model.component:
 print("\n*********************************************************")
 print("***************** RUNNING WORKFLOWS ***********************")
 print("*********************************************************")
+
 start_node = list(nodes)[0]
 print("Start Node: ", start_node)
 node = start_node
