@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn import metrics
 from sklearn.metrics import classification_report
 
-import src.utils.proactive_helper as ph
+import utils.proactive_helper as ph
 
 
 SEED = 42

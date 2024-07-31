@@ -7,7 +7,7 @@ from sklearn.model_selection import KFold
 from sklearn.model_selection import GridSearchCV
 import xgboost as xgb
 
-import src.utils.proactive_helper as ph
+import utils.proactive_helper as ph
 
 SEED = 42
 

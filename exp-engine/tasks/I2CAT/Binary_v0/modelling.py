@@ -1,10 +1,10 @@
 import pandas as pd
 import xgboost as xgb
 
-import src.utils.metrics as ut_metrics
-import src.split_dataset as sd
+import utils.metrics as ut_metrics
+import split_dataset as sd
  
-import src.utils.proactive_helper as ph
+import utils.proactive_helper as ph
 
 SEED = 42
 NUM_WORKERS = -1

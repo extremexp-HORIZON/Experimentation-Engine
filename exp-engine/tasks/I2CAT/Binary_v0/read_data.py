@@ -1,7 +1,7 @@
 import pandas as pd
 
 [sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
-import src.utils.proactive_helper as ph
+import utils.proactive_helper as ph
 
 
 def load_data(path: str, dataset_id: str, entity_type: str) -> pd.DataFrame:
