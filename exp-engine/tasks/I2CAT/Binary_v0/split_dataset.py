@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
+[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
@@ -14,6 +17,7 @@ SEED = 42
 def split_data(dataset: pd.DataFrame, proportion: float) -> (pd.DataFrame, pd.DataFrame):
     # Split data in train validation
     # The train validation splits do not share users.
+    dataset["label"] = dataset["label"].astype(int)
     data_validation_unlabeled = dataset[dataset["label"] == -1]
     unique_users = dataset.loc[dataset["label"] != -1, 'user_id'].unique()
  
@@ -61,13 +65,15 @@ def grid_search_creator(fix_params: dict, cv_params: dict, n_splits: int,
 
 if __name__ == '__main__':
 
-    proportion = variables.get("proportion")
-    dataset = ph.load_datasets(variables, "dataset")
+    #proportion = variables.get("proportion")
+    proportion = 0.2
 
-    data_train_test, data_validation = split_data(dataset,proportion, SEED)
+    dataset = ph.load_dataset(variables, "dataset")
 
-    ph.save_datasets(variables, ("data_train", data_train_test))
-    ph.save_datasets(variables, ("data_validation", data_validation))
+    data_train_test, data_validation = split_data(dataset, proportion)
+
+    ph.save_dataset(variables, "data_train_test", data_train_test)
+    ph.save_dataset(variables, "data_validation", data_validation)
 
 
 

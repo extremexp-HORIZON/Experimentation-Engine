@@ -1,3 +1,5 @@
+[sys.path.append(os.path.join(os.getcwd(), folder)) for folder in variables.get("dependent_modules_folders").split(",")]
+
 import pandas as pd
 from sklearn import metrics
 from sklearn.metrics import classification_report
